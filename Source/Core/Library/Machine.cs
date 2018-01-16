@@ -1468,6 +1468,15 @@ namespace Microsoft.PSharp
         #region initialization
 
         /// <summary>
+        /// Initializes the machine by calling OnEntry of
+        /// the start state of the machine.
+        /// </summary>
+        protected virtual Task OnStart(Event e)
+        {
+            return GotoStartState(e);
+        }
+
+        /// <summary>
         /// Transitions to the start state, and executes the
         /// entry action, if there is any.
         /// </summary>
