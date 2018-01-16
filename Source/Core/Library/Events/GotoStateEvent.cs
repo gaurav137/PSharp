@@ -29,6 +29,11 @@ namespace Microsoft.PSharp
         public Type State;
 
         /// <summary>
+        /// Direct transition (OnEntry not executed)
+        /// </summary>
+        public bool DirectTransition;
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="s">Type of the state</param>
@@ -36,6 +41,19 @@ namespace Microsoft.PSharp
             : base()
         {
             this.State = s;
+            this.DirectTransition = false;
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="s">Type of the state</param>
+        /// <param name="d">Direct transition</param>
+        public GotoStateEvent(Type s, bool d)
+            : base()
+        {
+            this.State = s;
+            this.DirectTransition = d;
         }
     }
 }

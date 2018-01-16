@@ -375,7 +375,7 @@ namespace Microsoft.PSharp
         /// at the end of the current action.
         /// </summary>
         /// <typeparam name="S">Type of the state</typeparam>
-        protected void Goto<S>() where S: MachineState
+        protected virtual void Goto<S>() where S: MachineState
         {
 #pragma warning disable 618
             Goto(typeof(S));
@@ -388,7 +388,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="s">Type of the state</param>
         [Obsolete("Goto(typeof(T)) is deprecated; use Goto<T>() instead.")]
-        protected void Goto(Type s)
+        protected virtual void Goto(Type s)
         {
             this.Assert(!this.Info.IsHalted, $"Machine '{base.Id}' invoked Goto while halted.");
             // If the state is not a state of the machine, then report an error and exit.
@@ -397,6 +397,38 @@ namespace Microsoft.PSharp
                 val.Name.Equals(s.Name)), $"Machine '{base.Id}' " +
                 $"is trying to transition to non-existing state '{s.Name}'.");
             this.Raise(new GotoStateEvent(s));
+        }
+
+        /// <summary>
+        /// Transitions the machine to the specified <see cref="MachineState"/>
+        /// at the end of the current action without executing OnEntry of the
+        /// target state.
+        /// </summary>
+        /// <typeparam name="S">Type of the state</typeparam>
+        protected virtual void GotoDirect<S>() where S : MachineState
+        {
+#pragma warning disable 618
+            GotoDirect(typeof(S));
+#pragma warning restore 618
+        }
+
+        /// <summary>
+        /// Transitions the machine to the specified <see cref="MachineState"/>
+        /// at the end of the current action without executing OnEntry of the
+        /// target state.
+        /// Deprecated in favor of GotoDirect&lt;T&gt;().
+        /// </summary>
+        /// <param name="s">Type of the state</param>
+        [Obsolete("GotoDirect(typeof(T)) is deprecated; use GotoDirect<T>() instead.")]
+        protected virtual void GotoDirect(Type s)
+        {
+            this.Assert(!this.Info.IsHalted, $"Machine '{base.Id}' invoked GotoDirect while halted.");
+            // If the state is not a state of the machine, then report an error and exit.
+            this.Assert(StateTypeMap[this.GetType()].Any(val
+                => val.DeclaringType.Equals(s.DeclaringType) &&
+                val.Name.Equals(s.Name)), $"Machine '{base.Id}' " +
+                $"is trying to transition to non-existing state '{s.Name}'.");
+            this.Raise(new GotoStateEvent(s, true));
         }
 
         /// <summary>
@@ -889,7 +921,7 @@ namespace Microsoft.PSharp
                 if (e.GetType() == typeof(GotoStateEvent))
                 {
                     Type targetState = (e as GotoStateEvent).State;
-                    await this.GotoState(targetState, null);
+                    await this.GotoState(targetState, null, (e as GotoStateEvent).DirectTransition);
                 }
                 // Checks if the event is a push state event.
                 else if (e.GetType() == typeof(PushStateEvent))
@@ -901,12 +933,12 @@ namespace Microsoft.PSharp
                 else if (this.GotoTransitions.ContainsKey(e.GetType()))
                 {
                     var transition = this.GotoTransitions[e.GetType()];
-                    await this.GotoState(transition.TargetState, transition.Lambda);
+                    await this.GotoState(transition.TargetState, transition.Lambda, false);
                 }
                 else if (this.GotoTransitions.ContainsKey(typeof(WildCardEvent)))
                 {
                     var transition = this.GotoTransitions[typeof(WildCardEvent)];
-                    await this.GotoState(transition.TargetState, transition.Lambda);
+                    await this.GotoState(transition.TargetState, transition.Lambda, false);
                 }
                 // Checks if the event can trigger a push state transition.
                 else if (this.PushTransitions.ContainsKey(e.GetType()))
@@ -1116,13 +1148,18 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="s">Type of the state</param>
         /// <param name="onExitActionName">Action name</param>
-        private async Task GotoState(Type s, string onExitActionName)
+        /// <param name="directTransition">direct transition</param>
+        private async Task GotoState(Type s, string onExitActionName, bool directTransition)
         {
             this.Logger.OnGoto(this.Id, this.CurrentStateName, 
                 $"{s.DeclaringType}.{StateGroup.GetQualifiedStateName(s)}");
 
-            // The machine performs the on exit action of the current state.
-            await this.ExecuteCurrentStateOnExit(onExitActionName);
+            if (!directTransition)
+            {
+                // The machine performs the on exit action of the current state.
+                await this.ExecuteCurrentStateOnExit(onExitActionName);
+            }
+
             if (this.Info.IsHalted)
             {
                 return;
@@ -1136,8 +1173,11 @@ namespace Microsoft.PSharp
             // The machine transitions to the new state.
             this.DoStatePush(nextState);
 
-            // The machine performs the on entry action of the new state.
-            await this.ExecuteCurrentStateOnEntry();
+            if (!directTransition)
+            {
+                // The machine performs the on entry action of the new state.
+                await this.ExecuteCurrentStateOnEntry();
+            }
         }
 
         /// <summary>
