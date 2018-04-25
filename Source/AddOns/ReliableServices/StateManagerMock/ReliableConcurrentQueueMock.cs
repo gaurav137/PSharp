@@ -36,7 +36,7 @@ namespace Microsoft.PSharp.ReliableServices
 
         public Uri Name { get; set; }
 
-        Uri IReliableState.Name => throw new NotImplementedException();
+        Uri IReliableState.Name => Name;
 
         public Task ClearAsync()
         {
@@ -45,7 +45,33 @@ namespace Microsoft.PSharp.ReliableServices
 
         public Task<IAsyncEnumerable<T>> CreateEnumerableAsync(ITransaction tx)
         {
-            throw new NotImplementedException();
+            var mt = tx as TransactionMock;
+
+            List<T> ls;
+            lock (lck)
+            {
+                mt.RegisterStateObject(this);
+                mt.CheckTimeout(null);
+
+                ls = new List<T>(persisted_queue);
+                if (pending_enq.ContainsKey(tx))
+                {
+                    foreach (var v in pending_enq[tx])
+                    {
+                        ls.Insert(0, v);
+                    }
+                }
+                if (tx != pending_deq)
+                {
+                    for (int i = 0; i < pending_deq_values.Count; i++)
+                    {
+                        ls.Add(pending_deq_values[i]);
+                    }
+                }
+                ls.Reverse();
+            }
+
+            return Task.FromResult<IAsyncEnumerable<T>>(new MockAsyncEnumerable<T>(ls));
         }
 
         public Task EnqueueAsync(ITransaction tx, T value, CancellationToken cancellationToken = default(CancellationToken), TimeSpan? timeout = null)
@@ -79,7 +105,25 @@ namespace Microsoft.PSharp.ReliableServices
 
         public Task<long> GetCountAsync(ITransaction tx)
         {
-            return Count;
+            var mt = tx as TransactionMock;
+            var cnt = 0;
+
+            lock (lck)
+            {
+                mt.RegisterStateObject(this);
+                mt.CheckTimeout();
+
+                cnt = persisted_queue.Count;
+                if(pending_enq.ContainsKey(mt))
+                {
+                    cnt += pending_enq[mt].Count;
+                }
+                if(tx != pending_deq)
+                {
+                    cnt += pending_deq_values.Count;
+                }
+            }
+            return Task.FromResult((long)cnt);
         }
 
         public Task<ConditionalValue<T>> TryDequeueAsync(ITransaction tx, CancellationToken cancellationToken = default(CancellationToken), TimeSpan? timeout = null)
@@ -118,12 +162,12 @@ namespace Microsoft.PSharp.ReliableServices
 
         public Task<ConditionalValue<T>> TryDequeueAsync(ITransaction tx)
         {
-            throw new NotImplementedException();
+            return TryDequeueAsync(tx, default(CancellationToken), null);
         }
 
         public Task<ConditionalValue<T>> TryDequeueAsync(ITransaction tx, TimeSpan timeout, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return TryDequeueAsync(tx, cancellationToken, timeout);
         }
 
         public Task<ConditionalValue<T>> TryPeekAsync(ITransaction tx)

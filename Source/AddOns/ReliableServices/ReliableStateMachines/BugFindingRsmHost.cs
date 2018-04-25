@@ -74,7 +74,9 @@ namespace Microsoft.PSharp.ReliableServices
         internal override RsmHost CreateHost(string partition)
         {
             var id = new BugFindingRsmId(Runtime.CreateMachineId(typeof(BugFindingRsmHostMachine)), partition);
-            return new BugFindingRsmHost(this.StateManager, id, this.Runtime);
+            var host = new BugFindingRsmHost(this.StateManager, id, this.Runtime);
+            host.NetworkProvider = NetworkProvider;
+            return host;
         }
 
         public void SetTransaction(ITransaction tx)
@@ -257,6 +259,7 @@ namespace Microsoft.PSharp.ReliableServices
                     ));
 
                 var host = new BugFindingRsmHost(this.StateManager, tup.Key as BugFindingRsmId, Runtime);
+                host.NetworkProvider = this.NetworkProvider;
                 await host.Initialize(ty, tup.Value.Item2);
             }
 
@@ -334,11 +337,6 @@ namespace Microsoft.PSharp.ReliableServices
 
         public override async Task ReliableSend(IRsmId target, Event e)
         {
-            if (target.PartitionName != this.Id.PartitionName)
-            {
-                await this.NetworkProvider.RemoteSend(target, e);
-            }
-
             PendingSends.Add(Tuple.Create(target as BugFindingRsmId, e));
 
             if (!MachineHosted)

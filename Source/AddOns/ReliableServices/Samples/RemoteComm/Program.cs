@@ -13,10 +13,10 @@ namespace RemoteComm
     {
         static void Main(string[] args)
         {
-            System.Diagnostics.Debugger.Launch();
+            //System.Diagnostics.Debugger.Launch();
 
             var stateManager = new StateManagerMock(null);
-            stateManager.DisallowFailures();
+            //stateManager.DisallowFailures();
 
             var config = Configuration.Create(); //.WithVerbosityEnabled(2);
             var clientRuntime = PSharpRuntime.Create(config);
@@ -25,6 +25,23 @@ namespace RemoteComm
 
             Console.ReadLine();
 
+        }
+
+        [TestInit]
+        public static void TestInit()
+        {
+            //System.Diagnostics.Debugger.Launch();
+        }
+
+        [Test]
+        public static void Execute(PSharpRuntime runtime)
+        {
+            runtime.RegisterMonitor(typeof(Safety));
+            var stateManager = new StateManagerMock(runtime);
+            //stateManager.DisallowFailures();
+
+            var origHost = RsmHost.CreateForTesting(stateManager, "ThisPartition", runtime);
+            origHost.ReliableCreateMachine<M1>(new RsmInitEvent()).Wait();
         }
     }
 
@@ -110,6 +127,7 @@ namespace RemoteComm
         class Init : MonitorState { }
 
         [Cold]
+        [IgnoreEvents(typeof(End))]
         class F : MonitorState { }
     }
 

@@ -118,7 +118,7 @@ namespace Microsoft.PSharp.ReliableServices
         public static RsmHost CreateForTesting(IReliableStateManager stateManager, string partitionName, PSharpRuntime runtime)
         {
             var host = BugFindingRsmHost.Create(stateManager, partitionName, runtime);
-            host.NetworkProvider = new Net.DefaultRsmNetworkProvider(host);
+            host.NetworkProvider = new Net.DefaultRsmNetworkProvider(host); 
             return host;
         }
 

@@ -118,7 +118,7 @@ namespace Microsoft.PSharp.ReliableServices
         internal override RsmHost CreateHost(string partition)
         {
             var factory = new ServiceFabricRsmIdFactory(0, partition);
-            return new ServiceFabricRsmHost(this.StateManager, factory.Generate("Root"), factory, NetworkProvider, this.Runtime.Configuration);
+            return new ServiceFabricRsmHost(this.StateManager, factory.Generate("Root"), factory, NetworkProvider, PSharpRuntimeConfiguration);
         }
 
         private async Task Initialize(Type machineType, RsmInitEvent ev)
@@ -426,9 +426,12 @@ namespace Microsoft.PSharp.ReliableServices
                     await RemoteCreatedMachines.TryRemoveAsync(tx, id);
                 }
 
-                while(await RemoteMessages.GetCountAsync(tx) > 0)
+                if (RemoteMessages != null)
                 {
-                    await RemoteMessages.TryDequeueAsync(tx);
+                    while (await RemoteMessages.GetCountAsync(tx) > 0)
+                    {
+                        await RemoteMessages.TryDequeueAsync(tx);
+                    }
                 }
 
                 await tx.CommitAsync();
