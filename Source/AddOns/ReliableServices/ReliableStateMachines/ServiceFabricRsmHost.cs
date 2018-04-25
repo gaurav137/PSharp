@@ -419,22 +419,31 @@ namespace Microsoft.PSharp.ReliableServices
 
         private async Task ClearOutBuffers(HashSet<IRsmId> remoteMachines)
         {
-            using (var tx = StateManager.CreateTransaction())
+            // TODO: retry policy
+            while (true)
             {
-                foreach (var id in remoteMachines)
+                try
                 {
-                    await RemoteCreatedMachines.TryRemoveAsync(tx, id);
-                }
-
-                if (RemoteMessages != null)
-                {
-                    while (await RemoteMessages.GetCountAsync(tx) > 0)
+                    using (var tx = StateManager.CreateTransaction())
                     {
-                        await RemoteMessages.TryDequeueAsync(tx);
-                    }
-                }
+                        foreach (var id in remoteMachines)
+                        {
+                            await RemoteCreatedMachines.TryRemoveAsync(tx, id);
+                        }
 
-                await tx.CommitAsync();
+                        if (RemoteMessages != null)
+                        {
+                            while ((await RemoteMessages.TryDequeueAsync(tx)).HasValue) { }
+                        }
+
+                        await tx.CommitAsync();
+                    }
+                    break;
+                }
+                catch (Exception ex) when (ex is TimeoutException || ex is System.Fabric.TransactionFaultedException)
+                {
+                    continue;
+                }
             }
         }
 
