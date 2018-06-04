@@ -109,6 +109,14 @@ namespace Microsoft.PSharp.ReliableServices
             return host;
         }
 
+        public static RsmHost Create(IReliableStateManager stateManager, string partitionName, Configuration psharpConfig, Net.IRsmNetworkProvider netProvider)
+        {
+            var factory = new ServiceFabricRsmIdFactory(0, partitionName);
+            var host = ServiceFabricRsmHost.Create(stateManager, factory, null, psharpConfig);
+            host.NetworkProvider = netProvider;
+            return host;
+        }
+
         public static RsmHost Create(IReliableStateManager stateManager, string partitionName, Net.IRsmNetworkProvider netProvider, Configuration psharpConfig)
         {
             var factory = new ServiceFabricRsmIdFactory(0, partitionName);
@@ -137,6 +145,14 @@ namespace Microsoft.PSharp.ReliableServices
         /// <typeparam name="T">Machine Type</typeparam>
         /// <returns>Unique Id</returns>
         public abstract Task<IRsmId> ReliableCreateMachineId<T>() where T : ReliableStateMachine;
+
+        /// <summary>
+        /// Creates a fresh Id
+        /// </summary>
+        /// <param name="machineType">Machine Type</typeparam>
+        /// <returns>Unique Id</returns>
+        public abstract Task<IRsmId> ReliableCreateMachineId(Type machineType);
+
 
         /// <summary>
         /// Creates an RSM in the local partition

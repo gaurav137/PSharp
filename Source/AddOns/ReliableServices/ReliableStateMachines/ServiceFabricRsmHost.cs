@@ -514,6 +514,16 @@ namespace Microsoft.PSharp.ReliableServices
             return Task.FromResult(IdFactory.Generate(typeof(T).Name) as IRsmId);
         }
 
+        /// <summary>
+        /// Creates a fresh Id
+        /// </summary>
+        /// <param name="machineType">Machine Type</typeparam>
+        /// <returns>Unique Id</returns>
+        public override Task<IRsmId> ReliableCreateMachineId(Type machineType)
+        {
+            return Task.FromResult(IdFactory.Generate(machineType.Name) as IRsmId);
+        }
+
         public override async Task<IRsmId> ReliableCreateMachine<T>(RsmInitEvent startingEvent)
         {
             var id = IdFactory.Generate(typeof(T).Name);

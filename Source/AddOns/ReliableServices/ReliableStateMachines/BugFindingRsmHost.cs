@@ -291,6 +291,16 @@ namespace Microsoft.PSharp.ReliableServices
             return Task.FromResult(new BugFindingRsmId(Runtime.CreateMachineId(typeof(BugFindingRsmHostMachine)), this.Id.PartitionName) as IRsmId);
         }
 
+        /// <summary>
+        /// Creates a fresh Id
+        /// </summary>
+        /// <param name="machineType">Machine Type</typeparam>
+        /// <returns>Unique Id</returns>
+        public override Task<IRsmId> ReliableCreateMachineId(Type machineType)
+        {
+            return Task.FromResult(new BugFindingRsmId(Runtime.CreateMachineId(typeof(BugFindingRsmHostMachine)), this.Id.PartitionName) as IRsmId);
+        }
+
         public override async Task<IRsmId> ReliableCreateMachine<T>(RsmInitEvent startingEvent)
         {
             var id = await ReliableCreateMachineId<T>();
