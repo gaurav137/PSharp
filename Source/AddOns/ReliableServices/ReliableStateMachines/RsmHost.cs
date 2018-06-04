@@ -131,6 +131,15 @@ namespace Microsoft.PSharp.ReliableServices
         }
 
         /// <summary>
+        /// Returns the set of types used for internal reliable collections
+        /// </summary>
+        /// <returns></returns>
+        public static IEnumerable<Type> GetKnownTypesForSerliazation()
+        {
+            return new List<Type> { typeof(ServiceFabricRsmId), typeof(TaggedRemoteEvent) };
+        }
+
+        /// <summary>
         /// Create a host with the specified partition name
         /// </summary>
         /// <param name="partition">Partition Name</param>

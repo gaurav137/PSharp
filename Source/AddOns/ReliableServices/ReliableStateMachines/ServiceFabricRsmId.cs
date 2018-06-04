@@ -28,6 +28,7 @@ namespace Microsoft.PSharp.ReliableServices
         /// <summary>
         /// Partition hosting the RSM
         /// </summary>
+        [DataMember]
         public string PartitionName { get; private set; }
 
         /// <summary>
