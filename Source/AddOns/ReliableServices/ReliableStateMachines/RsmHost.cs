@@ -201,6 +201,14 @@ namespace Microsoft.PSharp.ReliableServices
         public abstract Task ReliableSend(IRsmId target, Event e);
 
         /// <summary>
+        /// Call the specification Monitor provided current transaction succeeds
+        /// </summary>
+        /// <typeparam name="T">Monitor</param>
+        /// <param name="e">Event</param>
+        /// <returns></returns>
+        public abstract void ReliableMonitor<T>(Event e) where T : Monitor;
+
+        /// <summary>
         /// Starts a periodic timer
         /// </summary>
         /// <param name="name">Name of the timer</param>

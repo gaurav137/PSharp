@@ -684,6 +684,16 @@ namespace Microsoft.PSharp.ReliableServices
 
         }
 
+        /// <summary>
+        /// Call the specification Monitor provided current transaction succeeds
+        /// </summary>
+        /// <typeparam name="T">Monitor</param>
+        /// <param name="e">Event</param>
+        /// <returns></returns>
+        public override void ReliableMonitor<T>(Event e)
+        {
+            // drop, in production
+        }
         private async Task ReliableSendRemote(IRsmId target, Event e)
         {
             if (MachineHosted)

@@ -117,6 +117,17 @@ namespace Microsoft.PSharp.ReliableServices
         }
 
         /// <summary>
+        /// Call the specification Monitor provided current transaction succeeds
+        /// </summary>
+        /// <typeparam name="T">Monitor</param>
+        /// <param name="e">Event</param>
+        /// <returns></returns>
+        public void ReliableMonitor<T>(Event e) where T : Monitor
+        {
+            Host.ReliableMonitor<T>(e);
+        }
+
+        /// <summary>
         /// Starts a periodic timer
         /// </summary>
         /// <param name="name">Name of the timer</param>

@@ -31,6 +31,11 @@ namespace Microsoft.PSharp.ReliableServices
         public List<Tuple<BugFindingRsmId, Event>> PendingSends;
 
         /// <summary>
+        /// Pending Monitor calls
+        /// </summary>
+        public List<Tuple<Type, Event>> PendingMonitorCalls;
+
+        /// <summary>
         /// Has the machine halted
         /// </summary>
         public bool MachineHalted;
@@ -61,6 +66,7 @@ namespace Microsoft.PSharp.ReliableServices
             this.Id = id;
             this.PendingMachineCreations = new Dictionary<IRsmId, Tuple<string, RsmInitEvent>>();
             this.PendingSends = new List<Tuple<BugFindingRsmId, Event>>();
+            this.PendingMonitorCalls = new List<Tuple<Type, Event>>();
             this.Runtime = runtime;
             MachineHalted = false;
             MachineFailureException = null;
@@ -222,6 +228,7 @@ namespace Microsoft.PSharp.ReliableServices
                     StackChanges = new StackDelta();
                     PendingMachineCreations.Clear();
                     PendingSends.Clear();
+                    PendingMonitorCalls.Clear();
 
                     PendingTimerCreations.Clear();
                     PendingTimerRemovals.Clear();
@@ -274,6 +281,12 @@ namespace Microsoft.PSharp.ReliableServices
 
             PendingTimerRemovals.Clear();
 
+            // monitor
+            foreach(var tup in PendingMonitorCalls)
+            {
+                this.Runtime.InvokeMonitor(tup.Item1, tup.Item2);
+            }
+
             // machine creations
             foreach (var tup in PendingMachineCreations)
             {
@@ -308,6 +321,7 @@ namespace Microsoft.PSharp.ReliableServices
 
             PendingMachineCreations.Clear();
             PendingSends.Clear();
+            PendingMonitorCalls.Clear();
         }
 
         /// <summary>
@@ -382,6 +396,17 @@ namespace Microsoft.PSharp.ReliableServices
             {
                 await ExecutePendingWork();
             }
+        }
+
+        /// <summary>
+        /// Call the specification Monitor provided current transaction succeeds
+        /// </summary>
+        /// <typeparam name="T">Monitor</param>
+        /// <param name="e">Event</param>
+        /// <returns></returns>
+        public override void ReliableMonitor<T>(Event e) 
+        {
+            PendingMonitorCalls.Add(Tuple.Create(typeof(T), e));
         }
 
         internal override void NotifyFailure(Exception ex, string methodName)
