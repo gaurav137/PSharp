@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.PSharp.IO;
 using Microsoft.ServiceFabric;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
@@ -77,6 +78,11 @@ namespace Microsoft.PSharp.ReliableServices
             var host = new BugFindingRsmHost(this.StateManager, id, this.Runtime);
             host.NetworkProvider = NetworkProvider;
             return host;
+        }
+
+        public override void SetLogger(ILogger logger)
+        {
+            Runtime.SetLogger(logger);
         }
 
         public void SetTransaction(ITransaction tx)

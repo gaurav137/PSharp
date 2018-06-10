@@ -86,7 +86,13 @@ namespace Microsoft.PSharp.ReliableServices
         /// </summary>
         private Configuration PSharpRuntimeConfiguration;
 
-        private ServiceFabricRsmHost(IReliableStateManager stateManager, ServiceFabricRsmId id, ServiceFabricRsmIdFactory factory, Net.IRsmNetworkProvider netProvider, Configuration config)
+        /// <summary>
+        /// P# logger
+        /// </summary>
+        private IO.ILogger Logger;
+
+        private ServiceFabricRsmHost(IReliableStateManager stateManager, ServiceFabricRsmId id, ServiceFabricRsmIdFactory factory, 
+            Net.IRsmNetworkProvider netProvider, Configuration config, IO.ILogger logger)
             : base(stateManager)
         {
             this.Id = id;
@@ -94,6 +100,7 @@ namespace Microsoft.PSharp.ReliableServices
             this.CreatedMachines = null;
             this.PendingMachineCreations = new Dictionary<IRsmId, Tuple<string, RsmInitEvent>>();
             this.PSharpRuntimeConfiguration = config;
+            this.Logger = logger;
             this.PendingMessages = new Queue<Tuple<IRsmId, Event>>();
 
             MachineHalted = false;
@@ -107,7 +114,7 @@ namespace Microsoft.PSharp.ReliableServices
         internal static RsmHost Create(IReliableStateManager stateManager, ServiceFabricRsmIdFactory factory, Net.IRsmNetworkProvider netProvider, Configuration config)
         {
             var id = factory.Generate("Root");
-            return new ServiceFabricRsmHost(stateManager, id, factory, netProvider, config);
+            return new ServiceFabricRsmHost(stateManager, id, factory, netProvider, config, null);
         }
 
         /// <summary>
@@ -118,7 +125,17 @@ namespace Microsoft.PSharp.ReliableServices
         internal override RsmHost CreateHost(string partition)
         {
             var factory = new ServiceFabricRsmIdFactory(0, partition);
-            return new ServiceFabricRsmHost(this.StateManager, factory.Generate("Root"), factory, NetworkProvider, PSharpRuntimeConfiguration);
+            return new ServiceFabricRsmHost(this.StateManager, factory.Generate("Root"), factory, 
+                NetworkProvider, PSharpRuntimeConfiguration, Logger);
+        }
+
+        public override void SetLogger(IO.ILogger logger)
+        {
+            this.Logger = logger;
+            if (logger != null)
+            {
+                Runtime?.SetLogger(logger);
+            }
         }
 
         private async Task Initialize(Type machineType, RsmInitEvent ev)
@@ -131,6 +148,11 @@ namespace Microsoft.PSharp.ReliableServices
             RemoteMessages = await StateManager.GetOrAddAsync<IReliableQueue<Tuple<IRsmId, Event>>>(string.Format("RemoteMessages.{0}", this.Id.Name));
 
             Runtime = PSharpRuntime.Create(PSharpRuntimeConfiguration);
+            if (Logger != null)
+            {
+                Runtime.SetLogger(Logger);
+            }
+
             MachineHosted = true;
 
             RunMachine(machineType, ev);
@@ -149,11 +171,21 @@ namespace Microsoft.PSharp.ReliableServices
 
                     if(!Runtime.IsRunning)
                     {
+                        
                         // TODO: Replace with a custom exception
                         throw new Exception("Unexpected failure of the P# runtime");
                     }
 
-                    await EventHandlerLoop(machineType, ev, firstExecution);
+                    try
+                    {
+                        await EventHandlerLoop(machineType, ev, firstExecution);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger?.WriteLine("Uncaught exception in {0}: {1}", this.Id, ex.ToString());
+                        throw;
+                    }
+
                     firstExecution = false;
 
                     if (MachineHalted)
@@ -370,7 +402,8 @@ namespace Microsoft.PSharp.ReliableServices
             {
                 if (tup.Key.PartitionName == this.Id.PartitionName)
                 {
-                    var host = new ServiceFabricRsmHost(this.StateManager, tup.Key as ServiceFabricRsmId, this.IdFactory, NetworkProvider, PSharpRuntimeConfiguration);
+                    var host = new ServiceFabricRsmHost(this.StateManager, tup.Key as ServiceFabricRsmId, this.IdFactory, 
+                        NetworkProvider, PSharpRuntimeConfiguration, Logger);
                     await host.Initialize(Type.GetType(tup.Value.Item1), tup.Value.Item2);
                 }
                 else

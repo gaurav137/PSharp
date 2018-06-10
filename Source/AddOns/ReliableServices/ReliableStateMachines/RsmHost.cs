@@ -131,6 +131,12 @@ namespace Microsoft.PSharp.ReliableServices
         }
 
         /// <summary>
+        /// Sets the logger
+        /// </summary>
+        /// <param name="logger"></param>
+        public abstract void SetLogger(Microsoft.PSharp.IO.ILogger logger);
+
+        /// <summary>
         /// Returns the set of types used for internal reliable collections
         /// </summary>
         /// <returns></returns>
