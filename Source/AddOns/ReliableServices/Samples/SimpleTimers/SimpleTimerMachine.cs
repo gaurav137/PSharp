@@ -60,13 +60,18 @@ namespace SimpleTimers
             var name = (this.ReceivedEvent as TimeoutEvent).Name;
             var cnt = await Counters.AddOrUpdateAsync(CurrentTransaction, name, 1, (k, v) => v + 1);
 
-            this.Assert(name == this.CurrentState.Name);
             this.Logger.WriteLine("SimpleTimer: Obtained timeout {0} in state A, count = {1}", name, cnt);
+            this.Assert(name == this.CurrentState.Name);
 
-            if(cnt == 5)
+            if(cnt == 23)
+            {
+                this.Monitor<LivenessMonitor>(new Done());
+                await StopTimer("A");
+            }
+
+            if(cnt % 2 == 0)
             {
                 this.Goto<B>();
-                await Counters.AddOrUpdateAsync(CurrentTransaction, name, 0, (k, v) => 0);
             }
         }
 
@@ -75,18 +80,38 @@ namespace SimpleTimers
             var name = (this.ReceivedEvent as Microsoft.PSharp.ReliableServices.Timers.TimeoutEvent).Name;
             var cnt = await Counters.AddOrUpdateAsync(CurrentTransaction, name, 1, (k, v) => v + 1);
 
-            this.Assert(name == this.CurrentState.Name);
             this.Logger.WriteLine("SimpleTimer: Obtained timeout {0} in state B, count = {1}", name, cnt);
+            this.Assert(name == this.CurrentState.Name);
 
-            if (cnt == 5)
+            if (cnt == 23)
+            {
+                this.Monitor<LivenessMonitor>(new Done());
+                await StopTimer("B");
+            }
+
+            if (cnt % 2 == 0)
             {
                 this.Goto<A>();
-                await Counters.AddOrUpdateAsync(CurrentTransaction, name, 0, (k, v) => 0);
             }
         }
+
         protected override async Task OnActivate()
         {
             Counters = await this.Host.GetOrAddAsync<IReliableDictionary<string, int>>("Counters");
         }
+    }
+
+    class Done : Event { }
+
+    class LivenessMonitor : Monitor
+    {
+        [Start]
+        [Hot]
+        [OnEventGotoState(typeof(Done), typeof(S2))]
+        class S1 : MonitorState { }
+
+        [Cold]
+        [IgnoreEvents(typeof(Done))]
+        class S2 : MonitorState { }
     }
 }

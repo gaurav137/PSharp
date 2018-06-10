@@ -32,6 +32,7 @@ namespace SimpleTimers
             var stateManager = new StateManagerMock(runtime);
             //stateManager.DisallowFailures();
 
+            runtime.RegisterMonitor(typeof(LivenessMonitor));
             var origHost = RsmHost.CreateForTesting(stateManager, "SinglePartition", runtime);
             origHost.ReliableCreateMachine<SimpleTimerMachine>(new RsmInitEvent()).Wait();
         }

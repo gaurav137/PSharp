@@ -93,6 +93,8 @@ namespace Microsoft.PSharp.ReliableServices
         private async Task Initialize(Type machineType, RsmInitEvent ev)
         {
             StateStackStore = await StateManager.GetOrAddAsync<IReliableDictionary<int, string>>(string.Format("StateStackStore.{0}", this.Id.Name));
+            Timers = await StateManager.GetOrAddAsync<IReliableDictionary<string, Timers.ReliableTimerConfig>>(string.Format("Timers.{0}", this.Id.Name));
+
             this.MachineType = machineType;
             this.StartingEvent = ev;
             MachineHosted = true;
@@ -123,8 +125,7 @@ namespace Microsoft.PSharp.ReliableServices
                 this.Mid = await Runtime.CreateMachineAndExecute(machineType, ev);
             }
 
-            if (MachineFailureException != null &&
-                (MachineFailureException is TimeoutException || MachineFailureException is System.Fabric.TransactionFaultedException))
+            if (MachineFailureException != null)
             {
                 throw MachineFailureException;
             }
@@ -157,6 +158,12 @@ namespace Microsoft.PSharp.ReliableServices
         {
             var eventProcessed = false;
 
+            string lastTimer = null;
+            if (ev is Timers.TimeoutEvent)
+            {
+                lastTimer = (ev as Timers.TimeoutEvent).Name;
+            }
+
             while (true)
             {
                 try
@@ -179,6 +186,22 @@ namespace Microsoft.PSharp.ReliableServices
                         }
 
                         await CurrentTransaction.CommitAsync();
+                    }
+
+                    if (lastTimer != null && eventProcessed)
+                    {
+                        if (PendingTimerRemovals.Contains(lastTimer))
+                        {
+                            // no need to cancel (our timer is a one-time timer)
+                            PendingTimerRemovals.Remove(lastTimer);
+                        }
+                        else
+                        {
+                            // restart timer
+                            PendingTimerCreations.Add(lastTimer,
+                                new Timers.ReliableTimerConfig(TimerObjects[lastTimer].Name, TimerObjects[lastTimer].TimePeriod));
+                        }
+                        TimerObjects.Remove(lastTimer);
                     }
 
                     StackChanges = new StackDelta();
