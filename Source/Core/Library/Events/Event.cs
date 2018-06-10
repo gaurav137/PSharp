@@ -28,6 +28,7 @@ namespace Microsoft.PSharp
         /// Specifies that there must not be more than k instances
         /// of e in the input queue of any machine.
         /// </summary>
+        [DataMember]
         protected internal int Assert { get; private set; }
 
         /// <summary>
@@ -35,6 +36,7 @@ namespace Microsoft.PSharp
         /// the cardinality of e beyond k in some queue must not be
         /// generated.
         /// </summary>
+        [DataMember]
         protected internal int Assume { get; private set; }
 
         /// <summary> 
