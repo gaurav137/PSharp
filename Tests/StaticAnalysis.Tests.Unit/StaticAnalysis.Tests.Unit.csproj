@@ -9,6 +9,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(OS)'=='Windows_NT'">
     <TargetFrameworks>net46</TargetFrameworks>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition="'$(OS)'=='UNIX'">
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
