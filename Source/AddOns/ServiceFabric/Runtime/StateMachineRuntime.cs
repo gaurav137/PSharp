@@ -17,6 +17,8 @@ namespace Microsoft.PSharp.ServiceFabric
     internal class ServiceFabricPSharpRuntime : StateMachineRuntime
     {
         private const string CreatedMachinesDictionaryName = "CreatedMachines";
+        private const string RemoteMessagesOutboxName = "RemoteMessagesOutbox";
+        private const string RemoteCreationsOutboxName = "RemoteCreationsOutbox";
 
         /// <summary>
         /// State Manager
@@ -112,7 +114,7 @@ namespace Microsoft.PSharp.ServiceFabric
             }
             else
             {
-                var RemoteCreatedMachinesOutbox = await StateManager.GetOrAddAsync<IReliableQueue<Tuple<string, MachineId, Event>>>("RemoteCreationsOutbox");
+                var RemoteCreatedMachinesOutbox = await StateManager.GetOrAddAsync<IReliableQueue<Tuple<string, MachineId, Event>>>(RemoteCreationsOutboxName);
                 await RemoteCreatedMachinesOutbox.EnqueueAsync(reliableCreator.CurrentTransaction, Tuple.Create(type.AssemblyQualifiedName, mid, e));
             }
 
@@ -194,18 +196,35 @@ namespace Microsoft.PSharp.ServiceFabric
             var reliableSender = sender as ReliableMachine;
             if (RemoteMachineManager.IsLocalMachine(mid))
             {
-                var targetQueue = await StateManager.GetLocalMachineQueue(mid);
+                var targetQueue = await StateManager.GetMachineInputQueue(mid);
                 
                 if (reliableSender == null || reliableSender.CurrentTransaction == null)
                 {
+                    // Environment sending to a local machine
                     using (var tx = this.StateManager.CreateTransaction())
                     {
-                        await targetQueue.EnqueueAsync(tx, new EventInfo(e), CancellationToken.None);
-                        await tx.CommitAsync();
+                        if (e is TaggedRemoteEvent)
+                        {
+                            var ReceiveCounters = await StateManager.GetMachineReceiveCounters(mid);
+                            var tg = (e as TaggedRemoteEvent);
+                            var currentCounter = await ReceiveCounters.GetOrAddAsync(tx, tg.mid.Name, 0);
+                            if (currentCounter == tg.tag - 1)
+                            {
+                                await targetQueue.EnqueueAsync(tx, new EventInfo(tg.ev));
+                                await ReceiveCounters.AddOrUpdateAsync(tx, tg.mid.Name, 0, (k, v) => tg.tag);
+                                await tx.CommitAsync();
+                            }
+                        }
+                        else
+                        {
+                            await targetQueue.EnqueueAsync(tx, new EventInfo(e));
+                            await tx.CommitAsync();
+                        }
                     }
                 }
                 else
                 {
+                    // Machine to machine
                     await targetQueue.EnqueueAsync(reliableSender.CurrentTransaction, new EventInfo(e));
                 }
             }
@@ -213,12 +232,14 @@ namespace Microsoft.PSharp.ServiceFabric
             {
                 if (reliableSender == null || reliableSender.CurrentTransaction == null)
                 {
+                    // Environment to remote machine
                     await RsmNetworkProvider.RemoteSend(mid, e);
                 }
                 else
                 {
-                    var SendCounters = await StateManager.GetOrAddAsync<IReliableDictionary<string, int>>("SendCounters_" + reliableSender.Id.ToString());
-                    var RemoteMessagesOutbox = await StateManager.GetOrAddAsync<IReliableQueue<Tuple<MachineId, Event>>>("RemoteMessagesOutbox");
+                    // Machine to remote machine
+                    var SendCounters = await StateManager.GetMachineSendCounters(reliableSender.Id);
+                    var RemoteMessagesOutbox = await StateManager.GetOrAddAsync<IReliableQueue<Tuple<MachineId, Event>>>(RemoteMessagesOutboxName);
 
                     var tag = await SendCounters.AddOrUpdateAsync(reliableSender.CurrentTransaction, mid.ToString(), 1, (key, oldValue) => oldValue + 1);
                     var tev = new TaggedRemoteEvent(reliableSender.Id, e, tag);
@@ -293,7 +314,7 @@ namespace Microsoft.PSharp.ServiceFabric
 
         private async Task ClearCreationsOutbox()
         {
-            var RemoteCreatedMachinesOutbox = await StateManager.GetOrAddAsync<IReliableQueue<Tuple<string, MachineId, Event>>>("RemoteCreationsOutbox");
+            var RemoteCreatedMachinesOutbox = await StateManager.GetOrAddAsync<IReliableQueue<Tuple<string, MachineId, Event>>>(RemoteCreationsOutboxName);
             while(true)
             {
                 var found = false;
@@ -316,7 +337,7 @@ namespace Microsoft.PSharp.ServiceFabric
 
         private async Task ClearMessagesOutbox()
         {
-            var RemoteMessagesOutbox = await StateManager.GetOrAddAsync<IReliableQueue<Tuple<MachineId, Event>>>("RemoteMessagesOutbox");
+            var RemoteMessagesOutbox = await StateManager.GetOrAddAsync<IReliableQueue<Tuple<MachineId, Event>>>(RemoteMessagesOutboxName);
             while (true)
             {
                 var found = false;
