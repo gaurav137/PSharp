@@ -18,14 +18,22 @@
         private List<Type> knownTypes;
         private EventSerializationProvider eventSerializationProvider;
 
-        public PSharpRuntime Runtime { get; private set; }
+        // For debugging purposes
+        private Dictionary<Type, string> TypeToPartitionMap = null;
 
-        protected PSharpService(StatefulServiceContext serviceContext, IEnumerable<Type> knownTypes) : base(serviceContext)
+        public TaskCompletionSource<PSharpRuntime> RuntimeTcs { get; private set; }
+
+        protected PSharpService(StatefulServiceContext serviceContext, IEnumerable<Type> knownTypes)
+            : this(serviceContext, knownTypes, typeToPartitionMap: null) { }
+
+        protected PSharpService(StatefulServiceContext serviceContext, IEnumerable<Type> knownTypes, Dictionary<Type, string> typeToPartitionMap) : base(serviceContext)
         {
             var localKnownTypes = new List<Type> { typeof(Event), typeof(TaggedRemoteEvent) };
             localKnownTypes.AddRange(knownTypes);
             
             this.knownTypes = localKnownTypes;
+            this.TypeToPartitionMap = typeToPartitionMap;
+            this.RuntimeTcs = new TaskCompletionSource<PSharpRuntime>();
 
             this.eventSerializationProvider = new EventSerializationProvider(this.knownTypes);
 
@@ -60,7 +68,7 @@
             localKnownTypes.AddRange(knownTypes);
 
             this.knownTypes = localKnownTypes;
-
+            this.RuntimeTcs = new TaskCompletionSource<PSharpRuntime>();
             this.eventSerializationProvider = new EventSerializationProvider(this.knownTypes);
 
             if (!this.StateManager.TryAddStateSerializer(
@@ -90,11 +98,31 @@
 
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
-            this.Runtime = ServiceFabricRuntimeFactory.Create(this.StateManager, this.GetRuntimeConfiguration());
+            IRemoteMachineManager machineManager = new SingleProcessMachineManager();
+
+            if(TypeToPartitionMap != null)
+            {
+                if (!(this.Partition.PartitionInfo is NamedPartitionInformation))
+                {
+                    throw new InvalidOperationException("Service must have named paritions");
+                }
+
+                var partitionName = (this.Partition.PartitionInfo as NamedPartitionInformation).Name;
+
+                machineManager = new SingleServiceMachineManager(base.Context.ServiceName.ToString(), partitionName, TypeToPartitionMap);
+            }
+
+            var runtime =
+            ServiceFabricRuntimeFactory.Create(this.StateManager, this.GetRuntimeConfiguration(),
+                machineManager,
+                new Func<PSharpRuntime, Net.IRsmNetworkProvider>(r => new Net.RsmNetworkProvider(machineManager, eventSerializationProvider)));
+
+            this.RuntimeTcs.SetResult(runtime);
+
             var logger = this.GetPSharpRuntimeLogger();
             if (logger != null)
             {
-                ServiceFabricRuntimeFactory.Current.SetLogger(new EventSourcePSharpLogger(logger));
+                runtime.SetLogger(new EventSourcePSharpLogger(logger));
             }
 
             // Lets have a runtime.Initialize(cancellationToken);
@@ -161,21 +189,22 @@
             return Task.FromResult(new List<ResourceDetailsResponse>());
         }
 
-        public virtual Task<MachineId> CreateMachineId(string machineType, string friendlyName)
+        public virtual async Task<MachineId> CreateMachineId(string machineType, string friendlyName)
         {
-            return Task.FromResult(new MachineId(machineType, friendlyName, ServiceFabricRuntimeFactory.Current));
+            var runtime = await RuntimeTcs.Task;
+            return runtime.CreateMachineId(Type.GetType(machineType), friendlyName);
         }
 
-        public virtual Task CreateMachine(MachineId machineId, Event e)
+        public virtual async Task CreateMachine(MachineId machineId, string machineType, Event e)
         {
-            //TODO: Implement
-            return Task.FromResult(true);
+            var runtime = await RuntimeTcs.Task;
+            runtime.CreateMachine(machineId, Type.GetType(machineType), e);
         }
 
-        public virtual Task SendEvent(MachineId machineId, Event e)
+        public virtual async Task SendEvent(MachineId machineId, Event e)
         {
-            //TODO: Implement
-            return Task.FromResult(true);
+            var runtime = await RuntimeTcs.Task;
+            runtime.SendEvent(machineId, e);
         }
     }
 }
