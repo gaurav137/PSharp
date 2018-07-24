@@ -77,6 +77,26 @@ namespace Microsoft.PSharp.ServiceFabric
         /// </summary>
         internal static bool testMode = false;
 
+        /// <summary>
+        /// Set of active reliable timers
+        /// </summary>
+        private IReliableDictionary<string, Timers.ReliableTimerConfig> Timers;
+
+        /// <summary>
+        /// Pending set of timers to be started
+        /// </summary>
+        private Dictionary<string, Timers.ReliableTimerConfig> PendingTimerCreations;
+
+        /// <summary>
+        /// Pending set of timers to be stopped
+        /// </summary>
+        private HashSet<string> PendingTimerRemovals;
+
+        /// <summary>
+        /// Active timers
+        /// </summary>
+        private Dictionary<string, Timers.ISingleTimer> TimerObjects;
+
         #endregion
 
         /// <summary>
@@ -95,6 +115,10 @@ namespace Microsoft.PSharp.ServiceFabric
             this.LastDequeuedEvent = null;
 
             this.CreatedRegisters = new List<Utilities.RsmRegister>();
+
+            this.TimerObjects = new Dictionary<string, Timers.ISingleTimer>();
+            this.PendingTimerCreations = new Dictionary<string, ServiceFabric.Timers.ReliableTimerConfig>();
+            this.PendingTimerRemovals = new HashSet<string>();
         }
 
         /// <summary>
@@ -151,12 +175,15 @@ namespace Microsoft.PSharp.ServiceFabric
         {
             StateStackStore = await StateManager.GetMachineStackStore(Id);
             InputQueue = await StateManager.GetMachineInputQueue(Id);
+            Timers = await StateManager.GetMachineReliableTimers(Id);
 
             var startState = this.StateStack.Peek();
 
             this.StateStack.Clear();
             this.PendingStateChanges.Clear();
             this.PendingStateChangesInverted.Clear();
+            PendingTimerCreations.Clear();
+            PendingTimerRemovals.Clear();
 
             CurrentTransaction = this.StateManager.CreateTransaction();
             SetReliableRegisterTx();
@@ -178,6 +205,20 @@ namespace Microsoft.PSharp.ServiceFabric
                 this.Assert(e == null, "Unexpected event passed on failover");
 
                 await OnActivate();
+
+                // start timers
+                var enumerator = (await Timers.CreateEnumerableAsync(CurrentTransaction))
+                    .GetAsyncEnumerator();
+                var ct = new System.Threading.CancellationToken();
+
+                while (await enumerator.MoveNextAsync(ct))
+                {
+                    var config = enumerator.Current.Value;
+
+                    var timer = CreateSingleTimer(config.Period, config.Name);
+                    timer.StartTimer();
+                    TimerObjects.Add(config.Name, timer);
+                }
             }
             else
             {
@@ -191,6 +232,82 @@ namespace Microsoft.PSharp.ServiceFabric
                 await this.ExecuteCurrentStateOnEntry();
             }
         }
+
+        #region Timers
+
+        /// <summary>
+        /// Starts a periodic timer
+        /// </summary>
+        /// <param name="name">Name of the timer</param>
+        /// <param name="period">Periodic interval (ms)</param>
+        protected async Task StartTimer(string name, int period)
+        {
+            var config = new Timers.ReliableTimerConfig(name, period);
+            var success = await Timers.TryAddAsync(CurrentTransaction, name, config);
+            this.Assert(success, "Timer {0} already started", name);
+
+            PendingTimerCreations.Add(name, config);
+        }
+
+        /// <summary>
+        /// Stops a timer
+        /// </summary>
+        /// <param name="name"></param>
+        protected async Task StopTimer(string name)
+        {
+            var cv = await Timers.TryRemoveAsync(CurrentTransaction, name);
+            this.Assert(cv.HasValue, "Attempt to stop a timer {0} that was not started", name);
+
+            if (PendingTimerCreations.ContainsKey(name))
+            {
+                // timer was pending, so just remove it
+                PendingTimerCreations.Remove(name);
+            }
+            else
+            {
+                PendingTimerRemovals.Add(name);
+            }
+
+        }
+
+        /// <summary>
+        /// Actually start/stop the timers marked pending
+        /// </summary>
+        private async Task ProcessTimers()
+        {
+            foreach (var tup in PendingTimerCreations)
+            {
+                var timer = CreateSingleTimer(tup.Value.Period, tup.Key);
+                timer.StartTimer();
+                TimerObjects.Add(tup.Key, timer);
+            }
+
+            PendingTimerCreations.Clear();
+
+            foreach (var name in PendingTimerRemovals)
+            {
+                if (!TimerObjects.ContainsKey(name)) continue;
+
+                var success = TimerObjects[name].StopTimer();
+                if (!success)
+                {
+                    // wait for, and remove, the timeout
+                    await base.Receive(typeof(Timers.TimeoutEvent), ev => (ev as Timers.TimeoutEvent).Name == name);
+                }
+
+                TimerObjects.Remove(name);
+            }
+
+            PendingTimerRemovals.Clear();
+        }
+
+        private Timers.ISingleTimer CreateSingleTimer(int period, string name)
+        {
+            return InTestMode ? (Timers.ISingleTimer)new Timers.ReliableTimerMock(this.Id, period, name)
+                : (Timers.ISingleTimer)new Timers.ReliableTimerProd(this.Id, period, name);
+        }
+
+        #endregion
 
         #region internal methods
 
@@ -243,6 +360,8 @@ namespace Microsoft.PSharp.ServiceFabric
                 }
             }
 
+            await ProcessTimers();
+
             CurrentTransaction.Dispose();
             PendingStateChanges.Clear();
             PendingStateChangesInverted.Clear();
@@ -255,6 +374,8 @@ namespace Microsoft.PSharp.ServiceFabric
         /// </summary>
         internal override async Task<bool> RunEventHandler()
         {
+            Timers.ISingleTimer lastTimer = null;
+
             if (this.Info.IsHalted)
             {
                 return true;
@@ -271,10 +392,24 @@ namespace Microsoft.PSharp.ServiceFabric
 
                 if (nextEventInfo == null)
                 {
+                    var lastTimerStopped = false;
+                    if (lastTimer != null && PendingTimerRemovals.Contains(lastTimer.Name))
+                    {
+                        lastTimerStopped = true;
+                    }
+
                     if (CurrentTransaction != null)
                     {
                         await CommitCurrentTransaction();
                     }
+
+                    if (!lastTimerStopped && lastTimer != null)
+                    {
+                        var newTimer = CreateSingleTimer(lastTimer.TimePeriod, lastTimer.Name);
+                        TimerObjects[lastTimer.Name] = newTimer;
+                        newTimer.StartTimer();
+                    }
+
                     CurrentTransaction = this.StateManager.CreateTransaction();
                     SetReliableRegisterTx();
 

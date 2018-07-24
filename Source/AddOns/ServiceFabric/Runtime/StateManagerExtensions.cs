@@ -10,6 +10,7 @@ namespace Microsoft.PSharp.ServiceFabric
         private const string SendCountersPrefix = "SendCounters_";
         private const string ReceiveCountersPrefix = "ReceiveCounters_";
         private const string StateStackStorePrefix = "StateStackStore_";
+        private const string ReliableTimersPrefix = "ReliableTimers_";
 
         public static Task<IReliableConcurrentQueue<EventInfo>> GetMachineInputQueue(this IReliableStateManager manager, MachineId id)
         {
@@ -29,6 +30,11 @@ namespace Microsoft.PSharp.ServiceFabric
         public static Task<IReliableDictionary<int, string>> GetMachineStackStore(this IReliableStateManager manager, MachineId id)
         {
             return manager.GetOrAddAsync<IReliableDictionary<int, string>>(StateStackStorePrefix + id.ToString());
+        }
+
+        public static Task<IReliableDictionary<string, Timers.ReliableTimerConfig>> GetMachineReliableTimers(this IReliableStateManager manager, MachineId id)
+        {
+            return manager.GetOrAddAsync<IReliableDictionary<string, Timers.ReliableTimerConfig>>(ReliableTimersPrefix + id.ToString());
         }
     }
 }
