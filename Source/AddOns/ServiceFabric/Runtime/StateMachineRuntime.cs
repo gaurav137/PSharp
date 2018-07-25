@@ -38,7 +38,7 @@ namespace Microsoft.PSharp.ServiceFabric
         /// <summary>
         /// Pending machine creations
         /// </summary>
-        Dictionary<ITransaction, List<Tuple<MachineId, Type, string, Event, MachineId>>> PendingMachineCreations;
+        Dictionary<ITransaction, List<Tuple<MachineId, Type, Event, MachineId>>> PendingMachineCreations;
 
         /// <summary>
         /// RSM network provider
@@ -51,17 +51,22 @@ namespace Microsoft.PSharp.ServiceFabric
         public IRemoteMachineManager RemoteMachineManager { get; }
 
         internal ServiceFabricPSharpRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager)
-            : this(stateManager, manager, Configuration.Create())
+            : this(stateManager, manager, Configuration.Create(), CancellationToken.None)
         { }
 
-        internal ServiceFabricPSharpRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager, Configuration configuration, CancellationToken cancellationToken)
+        internal ServiceFabricPSharpRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager, Configuration configuration)
+            : this(stateManager, manager, configuration, CancellationToken.None)
+        { }
+
+        internal ServiceFabricPSharpRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager, Configuration configuration,
+            CancellationToken cancellationToken)
             : base(configuration)
         {
             this.StateManager = stateManager;
             this.ServiceCancellationToken = cancellationToken;
             this.DefaultTimeLimit = TimeSpan.FromSeconds(4);
             this.RemoteMachineManager = manager;
-            this.PendingMachineCreations = new Dictionary<ITransaction, List<Tuple<MachineId, Type, string, Event, MachineId>>>();
+            this.PendingMachineCreations = new Dictionary<ITransaction, List<Tuple<MachineId, Type, Event, MachineId>>>();
             StartClearOutboxTasks();
         }
 
@@ -134,7 +139,8 @@ namespace Microsoft.PSharp.ServiceFabric
             this.Assert(type.IsSubclassOf(typeof(ReliableMachine)), "Type '{0}' is not a reliable machine.", type.Name);
             this.Assert(creator == null || creator is ReliableMachine, "Type '{0}' is not a reliable machine.", creator != null ? creator.GetType().Name : "");
 
-            // Idempotence check (TODO: make concurrency safe)
+            // Idempotence check
+            // TODO: make concurrency safe
             if (MachineMap.ContainsKey(mid))
             {
                 // machine already created
@@ -161,10 +167,10 @@ namespace Microsoft.PSharp.ServiceFabric
 
                 if(!PendingMachineCreations.ContainsKey(reliableCreator.CurrentTransaction))
                 {
-                    PendingMachineCreations[reliableCreator.CurrentTransaction] = new List<Tuple<MachineId, Type, string, Event, MachineId>>();
+                    PendingMachineCreations[reliableCreator.CurrentTransaction] = new List<Tuple<MachineId, Type, Event, MachineId>>();
                 }
                 PendingMachineCreations[reliableCreator.CurrentTransaction].Add(
-                    Tuple.Create(mid, type, friendlyName, e, reliableCreator.Id));
+                    Tuple.Create(mid, type, e, reliableCreator.Id));
             }
 
             return mid;
@@ -173,7 +179,8 @@ namespace Microsoft.PSharp.ServiceFabric
 
         private void StartMachine(MachineId mid, Type type, Event e, MachineId creator)
         {
-            // Idempotence check (TODO: make concurrency safe)
+            // Idempotence check
+            // TODO: make concurrency safe
             if (MachineMap.ContainsKey(mid))
             {
                 // machine already created
@@ -356,7 +363,11 @@ namespace Microsoft.PSharp.ServiceFabric
                     {
                         foreach (var tup in this.PendingMachineCreations[tx])
                         {
+<<<<<<< HEAD
                             this.StartMachine(tup.Item1, tup.Item2, tup.Item3, tup.Item4, tup.Item5);
+=======
+                            this.StartMachine(tup.Item1, tup.Item2, tup.Item3, tup.Item4);
+>>>>>>> 843bd1e2... minor tweaks and typos
                         }
 
                         this.PendingMachineCreations.Remove(tx);
