@@ -332,10 +332,17 @@ namespace Microsoft.PSharp.ServiceFabric
         /// </summary>
         /// <param name="machine">Machine</param>
         /// <param name="args">Arguments</param>
-        protected internal override void NotifyProgress(Machine machine, params object[] args)
+        protected internal override async Task NotifyProgress(Machine machine, params object[] args)
         {
             if (args.Length > 0)
             {
+                // Halt notification
+                if(args[0] is string && (args[0] as string) == "Halt")
+                {
+                    var createdMachineMap = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, Tuple<MachineId, string, Event>>>(CreatedMachinesDictionaryName);
+                    await createdMachineMap.TryRemoveAsync((machine as ReliableMachine).CurrentTransaction, machine.Id.ToString());
+                }
+
                 // Notifies that a reliable machine has committed its current transaction.
                 ITransaction tx = args[0] as ITransaction;
                 if (tx != null)
