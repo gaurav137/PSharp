@@ -222,6 +222,11 @@ namespace Microsoft.PSharp.TestingServices
                     {
                         runtime.AssertNoMonitorInHotStateAtTermination();
                     }
+                    
+                    if (runtime.Scheduler.BugFound && this.InternalError.Length == 0)
+                    {
+                        base.ErrorReporter.WriteErrorLine(runtime.Scheduler.BugReport);
+                    }
 
                     if (runtime.Scheduler.BugFound && this.InternalError.Length == 0)
                     {
