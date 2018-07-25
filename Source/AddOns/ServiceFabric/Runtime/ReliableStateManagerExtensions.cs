@@ -11,6 +11,7 @@ namespace Microsoft.PSharp.ServiceFabric
         private static readonly IReactiveReliableQueueManager _reactiveReliableQueueManager = new ReactiveReliableQueueManager();
         private static readonly ICounterManager _counterManager = new CounterManager();
         private static readonly IDeferrableReliableQueueManager _deferrableReliableQueueManager = new DeferrableReliableQueueManager();
+        private static readonly IQueueUsingDictionaryManager _queueUsingDictionaryManager = new QueueUsingDictionaryManager();
 
         public static async Task<IReactiveReliableQueue<T>> GetOrAddReactiveReliableQueue<T>(this IReliableStateManager reliableStateManager, string name)
         {
@@ -46,6 +47,14 @@ namespace Microsoft.PSharp.ServiceFabric
             }
 
             return deferrableReliableQueue;
+        }
+
+        public static async Task<IQueueUsingDictionary<T>> GetOrAddQueueAsDictionary<T>(this IReliableStateManager reliableStateManager, string name)
+        {
+            var backingDictionary = await reliableStateManager.GetOrAddAsync<IReliableDictionary<long, T>>($"{name}-backingDictionary").ConfigureAwait(false);
+            var queueUsingDictionary = _queueUsingDictionaryManager.GetOrCreateAsync<T>(name, backingDictionary);
+            reliableStateManager.StateManagerChanged += queueUsingDictionary.OnStateManagerChangedHandler;
+            return queueUsingDictionary;
         }
 
     }
