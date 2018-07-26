@@ -98,7 +98,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BankAccount", "Source\AddOn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceFabric.TestingServices", "Source\AddOns\ServiceFabric\TestingServices\ServiceFabric.TestingServices.csproj", "{C4C379BC-2E24-4D57-915B-55D7560DE70E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoAppConsole", "Source\AddOns\ServiceFabric\Samples\DemoApp\DemoAppConsole\DemoAppConsole.csproj", "{53DA21DF-8A92-4454-BAAB-D122A775CE88}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoAppConsole", "Source\AddOns\ServiceFabric\Samples\DemoApp\DemoAppConsole\DemoAppConsole.csproj", "{53DA21DF-8A92-4454-BAAB-D122A775CE88}"
+EndProject
+Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "WordCountService", "Source\AddOns\ServiceFabric\Samples\WordCountService\WordCountService.sfproj", "{8785A77C-1803-42AA-8B34-512362416F8A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordCountApp", "Source\AddOns\ServiceFabric\Samples\WordCountApp\WordCountApp.csproj", "{FF9712E8-9C58-48FC-847F-99078FB0C204}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -532,6 +536,24 @@ Global
 		{53DA21DF-8A92-4454-BAAB-D122A775CE88}.Release|x64.Build.0 = Release|Any CPU
 		{53DA21DF-8A92-4454-BAAB-D122A775CE88}.Release|x86.ActiveCfg = Release|Any CPU
 		{53DA21DF-8A92-4454-BAAB-D122A775CE88}.Release|x86.Build.0 = Release|Any CPU
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Debug|x64.ActiveCfg = Debug|x64
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Debug|x64.Build.0 = Debug|x64
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Debug|x64.Deploy.0 = Debug|x64
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Debug|x86.ActiveCfg = Debug|x64
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Release|Any CPU.ActiveCfg = Release|x64
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Release|x64.ActiveCfg = Release|x64
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Release|x64.Build.0 = Release|x64
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Release|x64.Deploy.0 = Release|x64
+		{8785A77C-1803-42AA-8B34-512362416F8A}.Release|x86.ActiveCfg = Release|x64
+		{FF9712E8-9C58-48FC-847F-99078FB0C204}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{FF9712E8-9C58-48FC-847F-99078FB0C204}.Debug|x64.ActiveCfg = Debug|x64
+		{FF9712E8-9C58-48FC-847F-99078FB0C204}.Debug|x64.Build.0 = Debug|x64
+		{FF9712E8-9C58-48FC-847F-99078FB0C204}.Debug|x86.ActiveCfg = Debug|x64
+		{FF9712E8-9C58-48FC-847F-99078FB0C204}.Release|Any CPU.ActiveCfg = Release|x64
+		{FF9712E8-9C58-48FC-847F-99078FB0C204}.Release|x64.ActiveCfg = Release|x64
+		{FF9712E8-9C58-48FC-847F-99078FB0C204}.Release|x64.Build.0 = Release|x64
+		{FF9712E8-9C58-48FC-847F-99078FB0C204}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -579,6 +601,8 @@ Global
 		{F60A9C36-2A11-4B3A-A27A-58366DF6AA29} = {99BBC3D0-DB63-48B6-8A60-7DDB63CFA25E}
 		{C4C379BC-2E24-4D57-915B-55D7560DE70E} = {65338B9B-4990-4C3A-9BB1-2B9E30115157}
 		{53DA21DF-8A92-4454-BAAB-D122A775CE88} = {FE5B9A61-E336-45AF-8749-41D28F8065DB}
+		{8785A77C-1803-42AA-8B34-512362416F8A} = {99BBC3D0-DB63-48B6-8A60-7DDB63CFA25E}
+		{FF9712E8-9C58-48FC-847F-99078FB0C204} = {99BBC3D0-DB63-48B6-8A60-7DDB63CFA25E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DC84FA00-A3A9-43A9-B63D-57053852DA18}

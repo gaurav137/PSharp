@@ -10,7 +10,7 @@ namespace WordCount
     /// <summary>
     /// WordCount state machine.
     /// </summary>
-    class WordCountMachine : ReliableMachine
+    public class WordCountMachine : ReliableMachine
     {
         public WordCountMachine(IReliableStateManager stateManager)
             : base(stateManager)

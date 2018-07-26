@@ -3,7 +3,7 @@ using Microsoft.PSharp;
 
 namespace WordCount
 {
-    class WordEvent : Event
+    public class WordEvent : Event
     {
         /// <summary>
         ///  The word
@@ -25,7 +25,7 @@ namespace WordCount
     /// <summary>
     /// Initialization event for word-count machine
     /// </summary>
-    class WordCountInitEvent : Event
+    public class WordCountInitEvent : Event
     {
         [DataMember]
         public MachineId TargetMachine;

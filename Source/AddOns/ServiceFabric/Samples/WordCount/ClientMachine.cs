@@ -9,7 +9,7 @@ namespace WordCount
     /// <summary>
     /// ClientMachine.
     /// </summary>
-    class ClientMachine : ReliableMachine
+    public class ClientMachine : ReliableMachine
     {
         public ClientMachine(IReliableStateManager stateManager)
             : base(stateManager)

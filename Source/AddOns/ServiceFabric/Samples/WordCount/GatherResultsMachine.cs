@@ -9,7 +9,7 @@ namespace WordCount
     /// <summary>
     /// GatherResultsMachine.
     /// </summary>
-    class SimpleGatherResultsMachine : ReliableMachine
+    public class SimpleGatherResultsMachine : ReliableMachine
     {
         public SimpleGatherResultsMachine(IReliableStateManager stateManager)
             : base(stateManager)
