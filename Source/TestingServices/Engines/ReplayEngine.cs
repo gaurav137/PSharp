@@ -181,7 +181,6 @@ namespace Microsoft.PSharp.TestingServices
                         runtime = new BugFindingRuntime(base.Configuration, base.Strategy, base.Reporter);
                     }
 
-
                     // If verbosity is turned off, then intercept the program log, and also redirect
                     // the standard output and error streams into the runtime logger.
                     if (base.Configuration.Verbose < 2)
@@ -221,11 +220,6 @@ namespace Microsoft.PSharp.TestingServices
                     if (!runtime.Scheduler.BugFound && this.InternalError.Length == 0)
                     {
                         runtime.AssertNoMonitorInHotStateAtTermination();
-                    }
-                    
-                    if (runtime.Scheduler.BugFound && this.InternalError.Length == 0)
-                    {
-                        base.ErrorReporter.WriteErrorLine(runtime.Scheduler.BugReport);
                     }
 
                     if (runtime.Scheduler.BugFound && this.InternalError.Length == 0)
