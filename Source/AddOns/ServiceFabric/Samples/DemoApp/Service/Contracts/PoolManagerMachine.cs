@@ -85,20 +85,46 @@
             }
         }
 
-        private void RetryCreateVM()
+        private async Task RetryCreateVM()
         {
             eVMCreateFailureRequestEvent request = this.ReceivedEvent as eVMCreateFailureRequestEvent;
             this.Logger.WriteLine($"PM- {this.Id} received VM Create Failure for {request.senderId}");
             this.Logger.WriteLine($"PM- {this.Id} Deleting VM for {request.senderId} and Retrying create");
-            this.Send(request.senderId, new eVMDeleteRequestEvent(this.Id));
-            this.CreateMachine(typeof(VMManagerMachine), Guid.NewGuid().ToString(), new eVMRetryCreateRequestEvent(this.Id));
+            await SendDeleteRequest(request.senderId);
+            await SendCreateVMRequest();
         }
 
-        private void RetryDeleteVM()
+        private async Task SendCreateVMRequest()
+        {
+            MachineId machineId = this.CreateMachine(typeof(VMManagerMachine), Guid.NewGuid().ToString(), new eVMCreateRequestEvent(this.Id));
+            await VMCreatingTable.AddOrUpdateAsync(
+                this.CurrentTransaction,
+                machineId,
+                true,
+                (key, oldvalue) => true);
+        }
+
+        private async Task SendDeleteRequest(MachineId machineId)
+        {
+            this.Send(machineId, new eVMDeleteRequestEvent(this.Id));
+            await VMCreatedTable.TryRemoveAsync(
+                this.CurrentTransaction,
+                machineId);
+            await VMCreatingTable.TryRemoveAsync(
+                this.CurrentTransaction,
+                machineId);
+            await VMDeletingTable.AddOrUpdateAsync(
+                this.CurrentTransaction,
+                machineId,
+                true,
+                (key, oldvalue) => true);
+        }
+
+        private async Task RetryDeleteVM()
         {
             eVMDeleteFailureRequestEvent request = this.ReceivedEvent as eVMDeleteFailureRequestEvent;
             this.Logger.WriteLine($"PM- {this.Id} received VM Create Failure for {request.senderId}");
-            this.Send(request.senderId, new eVMRetryDeleteRequestEvent(this.Id));
+            await SendDeleteRequest(request.senderId);
         }
 
         private async Task ResizePool()
@@ -117,19 +143,15 @@
                 IAsyncEnumerator<MachineId> enumerator = enumerable.GetAsyncEnumerator();
                 CancellationToken token = new CancellationToken();
                 this.Logger.WriteLine($"PM- {this.Id} - Scale down Deleting VMs for pool {this.Id}");
+                List<MachineId> ids = new List<MachineId>();
                 while (difference++ < 0L)
                 {
                     await enumerator.MoveNextAsync(token);
-                    MachineId machineId = enumerator.Current;
-                    this.Send(machineId, new eVMDeleteRequestEvent(this.Id));
-                    await VMCreatedTable.TryRemoveAsync(
-                        this.CurrentTransaction,
-                        machineId);
-                    await VMDeletingTable.AddOrUpdateAsync(
-                        this.CurrentTransaction,
-                        machineId,
-                        true,
-                        (key, oldvalue) => true);
+                    ids.Add(enumerator.Current);
+                }
+                foreach (var id in ids)
+                {
+                    await SendDeleteRequest(id);
                 }
             }
             else
@@ -137,12 +159,7 @@
                 this.Logger.WriteLine($"PM- {this.Id} - Scale up Creating VMs for pool {this.Id}");
                 while (difference-- > 0L)
                 {
-                    MachineId machineId = this.CreateMachine(typeof(VMManagerMachine), Guid.NewGuid().ToString(), new eVMCreateRequestEvent(this.Id));
-                    await VMCreatingTable.AddOrUpdateAsync(
-                        this.CurrentTransaction,
-                        machineId,
-                        true,
-                        (key, oldvalue) => true);
+                    await SendCreateVMRequest();
                 }
             }
         }
@@ -171,16 +188,7 @@
 
             foreach (var id in ids)
             {
-                await VMCreatedTable.TryRemoveAsync(this.CurrentTransaction, id);
-                await VMCreatingTable.TryRemoveAsync(this.CurrentTransaction, id);
-
-                await VMDeletingTable.AddOrUpdateAsync(
-                    this.CurrentTransaction,
-                    id,
-                    true,
-                    (key, oldvalue) => true);
-
-                this.Send(id, new eVMDeleteRequestEvent(this.Id));
+                await SendDeleteRequest(id);
             }
         }
     }
