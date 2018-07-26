@@ -49,13 +49,13 @@ namespace PingPong
         private async Task Reply()
         {
             int count = (await Count.Get()) + 1;
-            if (count <= 2)
+            if (count <= 5)
             {
                 Send(await PongMachine.Get(), new PongEvent(this.Id));
                 this.Monitor<LivenessMonitor>(new LivenessMonitor.CheckPongEvent());
                 this.Monitor<SafetyMonitor>(new SafetyMonitor.CheckReplyCount(count));
                 await Count.Set(count);
-                this.Logger.WriteLine("#Pings: {0} / 2", count);
+                this.Logger.WriteLine("#Pings: {0} / 5", count);
             }
             else
             {

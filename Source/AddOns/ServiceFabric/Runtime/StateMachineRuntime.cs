@@ -372,11 +372,7 @@ namespace Microsoft.PSharp.ServiceFabric
                     {
                         foreach (var tup in this.PendingMachineCreations[tx])
                         {
-<<<<<<< HEAD
-                            this.StartMachine(tup.Item1, tup.Item2, tup.Item3, tup.Item4, tup.Item5);
-=======
                             this.StartMachine(tup.Item1, tup.Item2, tup.Item3, tup.Item4);
->>>>>>> 843bd1e2... minor tweaks and typos
                         }
 
                         this.PendingMachineCreations.Remove(tx);
