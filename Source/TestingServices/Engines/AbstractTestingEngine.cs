@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="AbstractTestingEngine.cs">
 //      Copyright (c) Microsoft Corporation. All rights reserved.
-//
+// 
 //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 //      EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 //      MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -324,7 +324,7 @@ namespace Microsoft.PSharp.TestingServices
             else if (this.Configuration.SchedulingStrategy == SchedulingStrategy.RDPOR)
             {
                 this.Strategy = new DPORStrategy(
-                    new ContractAsserter(),
+                    new ContractAsserter(), 
                     this.RandomNumberGenerator,
                     -1,
                     this.Configuration.MaxFairSchedulingSteps);
@@ -461,57 +461,13 @@ namespace Microsoft.PSharp.TestingServices
         }
 
         /// <summary>
-        /// Finds the testing runtime factory method, if one is provided.
-        /// </summary>
-        private void FindRuntimeFactoryMethod()
-        {
-            BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.InvokeMethod;
-            List<MethodInfo> runtimeFactoryMethods = this.FindTestMethodsWithAttribute(typeof(TestRuntimeCreate), flags, this.RuntimeAssembly);
-            foreach (var x in runtimeFactoryMethods)
-                Console.WriteLine(x.Name);
-
-            if (runtimeFactoryMethods.Count == 0)
-            {
-                Error.ReportAndExit($"Failed to find a testing runtime factory method in the '{this.RuntimeAssembly.FullName}' assembly.");
-            }
-            else if (runtimeFactoryMethods.Count > 1)
-            {
-                Error.ReportAndExit("Only one testing runtime factory method can be declared with " +
-                    $"the attribute '{typeof(TestRuntimeCreate).FullName}'. " +
-                    $"'{runtimeFactoryMethods.Count}' factory methods were found instead.");
-            }
-
-            if (runtimeFactoryMethods[0].ReturnType != typeof(BugFindingRuntime) ||
-                runtimeFactoryMethods[0].ContainsGenericParameters ||
-                runtimeFactoryMethods[0].IsAbstract || runtimeFactoryMethods[0].IsVirtual ||
-                runtimeFactoryMethods[0].IsConstructor ||
-                runtimeFactoryMethods[0].IsPublic || !runtimeFactoryMethods[0].IsStatic ||
-                runtimeFactoryMethods[0].GetParameters().Length != 3 ||
-                runtimeFactoryMethods[0].GetParameters()[0].ParameterType != typeof(Configuration) ||
-                runtimeFactoryMethods[0].GetParameters()[1].ParameterType != typeof(ISchedulingStrategy) ||
-                runtimeFactoryMethods[0].GetParameters()[2].ParameterType != typeof(IRegisterRuntimeOperation))
-            {
-                Error.ReportAndExit("Incorrect test runtime factory method declaration. Please " +
-                    "declare the method as follows:\n" +
-                    $"  [{typeof(TestRuntimeCreate).FullName}] internal static BugFindingRuntime " +
-                    $"{runtimeFactoryMethods[0].Name}(Configuration configuration, ISchedulingStrategy strategy, " +
-                    "IRegisterRuntimeOperation reporter) {{ ... }}");
-            }
-
-            this.TestRuntimeFactoryMethod = runtimeFactoryMethods[0];
-        }
-
-        /// <summary>
         /// Finds the entry point to the P# program.
         /// </summary>
         private void FindEntryPoint()
         {
             BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.InvokeMethod;
             List<MethodInfo> testMethods = this.FindTestMethodsWithAttribute(typeof(Test), flags, this.Assembly);
-<<<<<<< HEAD
 
-=======
->>>>>>> 5adcfc89... Added support for testing RSMs (#328)
 
             // Filter by test method name
             var filteredTestMethods = testMethods

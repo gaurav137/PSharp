@@ -32,22 +32,7 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Event type.
         /// </summary>
-        private Type _EventType;
-
-        /// <summary>
-        /// Event type.
-        /// </summary>
-        internal Type EventType
-        {
-            get
-            {
-                if (_EventType == null)
-                {
-                    _EventType = Event.GetType();
-                }
-                return _EventType;
-            }
-        }
+        internal Type EventType { get; private set; }
 
         /// <summary>
         /// Event name.
@@ -83,7 +68,7 @@ namespace Microsoft.PSharp
         internal EventInfo(Event e)
         {
             Event = e;
-            _EventType = e.GetType();
+            EventType = e.GetType();
             EventName = EventType.FullName;
             MustHandle = false;
         }
