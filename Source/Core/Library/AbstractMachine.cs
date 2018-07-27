@@ -19,7 +19,7 @@ using System.ComponentModel;
 namespace Microsoft.PSharp
 {
     /// <summary>
-    /// Abstract class representing a P# machine.
+    /// Abstract class representing a machine.
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -44,10 +44,10 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Initializes this machine.
         /// </summary>
-        /// <param name="runtime">PSharpRuntime</param>
+        /// <param name="runtime">IStateMachineRuntime</param>
         /// <param name="mid">MachineId</param>
         /// <param name="info">MachineInfo</param>
-        internal void Initialize(PSharpRuntime runtime, MachineId mid, MachineInfo info)
+        internal void Initialize(IStateMachineRuntime runtime, MachineId mid, MachineInfo info)
         {
             this.Runtime = mid.Runtime;
             this.Id = mid;

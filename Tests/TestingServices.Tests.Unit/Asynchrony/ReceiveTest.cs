@@ -41,7 +41,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestAsyncReceiveEvent()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(M));
             });
 

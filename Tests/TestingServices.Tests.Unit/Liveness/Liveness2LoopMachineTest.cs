@@ -92,7 +92,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             configuration.LivenessTemperatureThreshold = 200;
             configuration.SchedulingIterations = 1;
 
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.RegisterMonitor(typeof(LivenessMonitor));
                 r.CreateMachine(typeof(EventHandler));
             });

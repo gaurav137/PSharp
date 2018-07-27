@@ -75,7 +75,7 @@ namespace Microsoft.PSharp.SharedObjects.Tests.Unit
         [Fact]
         public void TestCounter()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var counter = SharedCounter.Create(runtime, 0);
             var tcs1 = new TaskCompletionSource<bool>();
             var tcs2 = new TaskCompletionSource<bool>();

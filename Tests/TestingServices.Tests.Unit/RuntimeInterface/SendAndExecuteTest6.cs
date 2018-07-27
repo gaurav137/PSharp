@@ -98,7 +98,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestHandledExceptionOnSendExec()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.RegisterMonitor(typeof(SafetyMonitor));
                 r.CreateMachine(typeof(Harness), new Config(true));
             });
@@ -110,7 +110,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestUnHandledExceptionOnSendExec()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.RegisterMonitor(typeof(SafetyMonitor));
                 r.CreateMachine(typeof(Harness), new Config(false));
             });

@@ -23,7 +23,7 @@ using Microsoft.ServiceFabric.Data;
 
 namespace Microsoft.PSharp.ServiceFabric.TestingServices
 {
-    internal class BugFindingRuntime : PSharp.TestingServices.BugFindingRuntime
+    internal class BugFindingRuntime : PSharp.TestingServices.BugFindingRuntime, IReliableStateMachineRuntime
     {
         /// <summary>
         /// The Service Fabric state manager used by the reliable machines.
@@ -55,11 +55,24 @@ namespace Microsoft.PSharp.ServiceFabric.TestingServices
             : base(configuration, strategy, reporter)
         {
             ReliableMachine.IsTestingModeEnabled = true;
-            this.StateManager = new StateManagerMock(this).DisallowFailures();
+            this.StateManager = new MockStateManager(this).DisallowFailures();
             this.CreatedMachines = new Dictionary<string, Tuple<MachineId, Type, Event>>();
             this.PendingMachineCreations = new Dictionary<MachineId, List<Tuple<MachineId, Type, string, Event, Guid?>>>();
             this.PendingEventSends = new Dictionary<MachineId, List<Tuple<MachineId, Event, SendOptions>>>();
         }
+
+        #region runtime interface
+
+        /// <summary>
+        /// Returns the created machine ids.
+        /// </summary>
+        /// <returns>MachineIds</returns>
+        public HashSet<MachineId> GetCreatedMachineIds()
+        {
+            return new HashSet<MachineId>(this.MachineMap.Keys);
+        }
+
+        #endregion
 
         /// <summary>
         /// Creates a new <see cref="Machine"/> of the specified <see cref="Type"/>.

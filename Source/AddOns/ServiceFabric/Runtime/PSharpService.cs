@@ -30,7 +30,7 @@
         private List<Type> knownTypes;
         internal EventSerializationProvider EventSerializationProvider;
 
-        public TaskCompletionSource<PSharpRuntime> RuntimeTcs { get; private set; }
+        public TaskCompletionSource<IReliableStateMachineRuntime> RuntimeTcs { get; private set; }
         protected IPSharpEventSourceLogger PSharpLogger { get; private set; }
 
         protected PSharpService(StatefulServiceContext serviceContext, IEnumerable<Type> knownTypes) : base(serviceContext)
@@ -39,7 +39,7 @@
             localKnownTypes.AddRange(knownTypes);
             
             this.knownTypes = localKnownTypes;
-            this.RuntimeTcs = new TaskCompletionSource<PSharpRuntime>();
+            this.RuntimeTcs = new TaskCompletionSource<IReliableStateMachineRuntime>();
 
             this.EventSerializationProvider = new EventSerializationProvider(this.knownTypes);
 
@@ -79,7 +79,7 @@
             localKnownTypes.AddRange(knownTypes);
 
             this.knownTypes = localKnownTypes;
-            this.RuntimeTcs = new TaskCompletionSource<PSharpRuntime>();
+            this.RuntimeTcs = new TaskCompletionSource<IReliableStateMachineRuntime>();
             this.EventSerializationProvider = new EventSerializationProvider(this.knownTypes);
 
             if (!this.StateManager.TryAddStateSerializer(
@@ -124,8 +124,10 @@
             IRemoteMachineManager machineManager = this.GetMachineManager();
             await machineManager.Initialize(cancellationToken);
 
-            var runtime = ServiceFabricRuntimeFactory.Create(this.StateManager, machineManager, this.GetRuntimeConfiguration(), cancellationToken,
-                new Func<PSharpRuntime, Net.IRsmNetworkProvider>(r => new Net.RsmNetworkProvider(machineManager, EventSerializationProvider)));
+            var runtime = ReliableRuntimeFactory.Create(this.StateManager, machineManager,
+                this.GetRuntimeConfiguration(), cancellationToken,
+                new Func<IReliableStateMachineRuntime, Net.IRsmNetworkProvider>(
+                    r => new Net.RsmNetworkProvider(machineManager, EventSerializationProvider)));
 
             if (this.PSharpLogger != null)
             {
@@ -183,8 +185,8 @@
             var details = new List<ResourceTypesResponse>();
             var types = this.GetMachineTypesWithMaxLoad();
             var runtime = await this.RuntimeTcs.Task;
-            HashSet<MachineId> list = runtime.GetCreatedMachines();
-            foreach (MachineId id in list)
+            HashSet<MachineId> ids = runtime.GetCreatedMachineIds();
+            foreach (MachineId id in ids)
             {
                 if (!typeMapping.ContainsKey(id.Type))
                 {

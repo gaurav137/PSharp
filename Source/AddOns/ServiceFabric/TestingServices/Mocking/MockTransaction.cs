@@ -8,9 +8,9 @@ namespace Microsoft.PSharp.ServiceFabric.TestingServices
     internal class MockTransaction : ITransaction
     {
         /// <summary>
-        /// The PSharp runtime.
+        /// The reliable state-machine runtime.
         /// </summary>
-        public PSharpRuntime Runtime { get; private set; }
+        public IReliableStateMachineRuntime Runtime { get; private set; }
 
         /// <summary>
         /// The transaction id.
@@ -42,10 +42,9 @@ namespace Microsoft.PSharp.ServiceFabric.TestingServices
         /// </summary>
         public long CommitSequenceNumber => 0;
 
-        public MockTransaction(PSharpRuntime runtime, long transactionId)
+        public MockTransaction(IReliableStateMachineRuntime runtime, long transactionId)
         {
-            // TODO: fix this.
-            this.Runtime = runtime == null ? PSharpRuntime.Create() : runtime;
+            this.Runtime = runtime;
             this.StateObjects = new List<ITxState>();
             this.Committed = false;
             this.TransactionId = transactionId;

@@ -132,10 +132,10 @@ namespace Microsoft.PSharp.ServiceFabric
         internal override async Task GotoStartState(Event e)
         {
             // TODO: Package this information alonside the StateManager
-            if(this.Runtime is ServiceFabricPSharpRuntime)
+            if (this.Runtime is ReliableStateMachineRuntime)
             {
-                this.ServiceCancellationToken = (this.Runtime as ServiceFabricPSharpRuntime).ServiceCancellationToken;
-                this.DefaultTimeLimit = (this.Runtime as ServiceFabricPSharpRuntime).DefaultTimeLimit;
+                this.ServiceCancellationToken = (this.Runtime as ReliableStateMachineRuntime).ServiceCancellationToken;
+                this.DefaultTimeLimit = (this.Runtime as ReliableStateMachineRuntime).DefaultTimeLimit;
             }
 
             StateStackStore = await StateManager.GetMachineStackStore(Id);

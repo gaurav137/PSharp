@@ -63,7 +63,7 @@ namespace Microsoft.PSharp.SharedObjects.Tests.Unit
         [Fact]
         public void TestRegister()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var counter = SharedRegister.Create<int>(runtime, 0);
             counter.SetValue(5);
 

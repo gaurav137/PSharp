@@ -100,7 +100,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         public void TestNoMemoryLeakAfterHalt()
         {
             var tcs = new TaskCompletionSource<bool>();
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             runtime.CreateMachine(typeof(M), new Configure(tcs));
             tcs.Task.Wait();
             runtime.Stop();

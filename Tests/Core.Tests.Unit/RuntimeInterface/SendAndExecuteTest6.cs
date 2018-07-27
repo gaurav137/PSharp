@@ -89,7 +89,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestHandledExceptionOnSendExec()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -106,7 +106,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestUnHandledExceptionOnSendExec()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             var message = "";

@@ -179,7 +179,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCalledOnce1()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -199,7 +199,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCalledOnce2()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -219,7 +219,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCalledOnceAsync1()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -239,7 +239,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCalledOnceAsync2()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -259,7 +259,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCanHalt()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -279,7 +279,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestUnHandledEventCanHalt()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate

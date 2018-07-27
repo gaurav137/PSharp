@@ -9,16 +9,16 @@ namespace PingPong
     {
         static void Main(string[] args)
         {
-            var stateManager = new StateManagerMock(null);
-            stateManager.DisallowFailures();
+            var stateManager = new MockStateManager(null).DisallowFailures();
 
             // Optional: increases verbosity level to see the P# runtime log.
             var configuration = Configuration.Create().WithVerbosityEnabled(2);
 
             // Creates a new Service Fabric P# runtime instance, and passes
             // the state manager and the configuration.
-            var runtime = ServiceFabricRuntimeFactory.Create(stateManager, configuration);
+            var runtime = ReliableRuntimeFactory.CreateLocal(stateManager, configuration);
             runtime.OnFailure += Runtime_OnFailure;
+            stateManager.SetRuntime(runtime);
 
             // Executes the P# program.
             Program.Execute(runtime);
@@ -30,7 +30,7 @@ namespace PingPong
         }
         
         [Test]
-        public static void Execute(PSharpRuntime runtime)
+        public static void Execute(IReliableStateMachineRuntime runtime)
         {
             runtime.RegisterMonitor(typeof(SafetyMonitor));
             runtime.RegisterMonitor(typeof(LivenessMonitor));

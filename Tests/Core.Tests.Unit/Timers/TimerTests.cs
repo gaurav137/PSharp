@@ -32,7 +32,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
 		[Fact]
 		public void ExceptionOnInvalidTimerTypeTest()
 		{
-			PSharpRuntime runtime = PSharpRuntime.Create();
+			var runtime = new StateMachineRuntime();
 
 			Exception ex = Assert.Throws<AssertionFailureException>(() => runtime.SetTimerMachineType(typeof(NonMachineSubClass)));
 		}
@@ -41,7 +41,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
 		[Fact]
 		public async Task BasicPeriodicTimerOperationTest()
 		{
-			PSharpRuntime runtime = PSharpRuntime.Create();
+			var runtime = new StateMachineRuntime();
 			var tcs = new TaskCompletionSource<bool>();
 			runtime.CreateMachine(typeof(T1), new Configure(tcs, true));
 			var result = await tcs.Task;
@@ -51,7 +51,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
 		[Fact]
 		public async Task BasicSingleTimerOperationTest()
 		{
-			PSharpRuntime runtime = PSharpRuntime.Create();
+			var runtime = new StateMachineRuntime();
 			var tcs = new TaskCompletionSource<bool>();
 			runtime.CreateMachine(typeof(T1), new Configure(tcs, false));
 			var result = await tcs.Task;
@@ -62,7 +62,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
 		[Fact]
 		public async Task InboxFlushOperationTest()
 		{
-			PSharpRuntime runtime = PSharpRuntime.Create();
+			var runtime = new StateMachineRuntime();
 			var tcs = new TaskCompletionSource<bool>();
 			runtime.CreateMachine(typeof(FlushingClient), new Configure(tcs, true));
 			var result = await tcs.Task;
@@ -72,7 +72,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
 		[Fact]
 		public async Task IllegalTimerStoppageTest()
 		{
-			PSharpRuntime runtime = PSharpRuntime.Create();
+			var runtime = new StateMachineRuntime();
 			var tcs = new TaskCompletionSource<bool>();
 			runtime.CreateMachine(typeof(T2), new Configure(tcs, true));
 			var result = await tcs.Task;
@@ -82,7 +82,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
 		[Fact]
 		public async Task IllegalPeriodSpecificationTest()
 		{
-			PSharpRuntime runtime = PSharpRuntime.Create();
+			var runtime = new StateMachineRuntime();
 			var tcs = new TaskCompletionSource<bool>();
 			runtime.CreateMachine(typeof(T4), new ConfigureWithPeriod(tcs, -1));
 			var result = await tcs.Task;

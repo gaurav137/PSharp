@@ -517,12 +517,12 @@ namespace Microsoft.PSharp.TestingServices
                 testMethod.IsConstructor ||
                 !testMethod.IsPublic || !testMethod.IsStatic ||
                 testMethod.GetParameters().Length != 1 ||
-                testMethod.GetParameters()[0].ParameterType != typeof(PSharpRuntime))
+                testMethod.GetParameters()[0].ParameterType != typeof(IStateMachineRuntime))
             {
                 Error.ReportAndExit("Incorrect test method declaration. Please " +
                     "declare the test method as follows:\n" +
                     $"  [{typeof(Test).FullName}] public static void " +
-                    $"{testMethod.Name}(PSharpRuntime runtime) {{ ... }}");
+                    $"{testMethod.Name}(IStateMachineRuntime runtime) {{ ... }}");
             }
 
             this.TestMethod = testMethod;

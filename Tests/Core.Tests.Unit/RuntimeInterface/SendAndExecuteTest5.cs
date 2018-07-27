@@ -106,7 +106,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
             var config = Configuration.Create();
             config.EnableMonitorsInProduction = true;
 
-            var runtime = PSharpRuntime.Create(config);
+            var runtime = new StateMachineRuntime(config);
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate

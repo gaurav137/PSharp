@@ -266,7 +266,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestExceptionSuppressed1()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(M1a));
             });
 
@@ -276,7 +276,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestExceptionSuppressed2()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(M1b));
             });
 
@@ -286,7 +286,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestExceptionSuppressed3()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(M1c));
             });
 
@@ -296,7 +296,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestExceptionSuppressed4()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(M1c));
             });
 
@@ -306,7 +306,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestExceptionNotSuppressed()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(M2));
             });
 
@@ -316,7 +316,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestRaiseOnException()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(M3a));
             });
 
@@ -326,7 +326,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestSendOnException()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(M3b));
             });
 
@@ -336,7 +336,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestMachineHalt1()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.RegisterMonitor(typeof(GetsDone));
                 r.CreateMachine(typeof(M4));
             });
@@ -347,7 +347,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestMachineHalt2()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.RegisterMonitor(typeof(GetsDone));
                 var m = r.CreateMachine(typeof(M5));
                 r.SendEvent(m, new E());

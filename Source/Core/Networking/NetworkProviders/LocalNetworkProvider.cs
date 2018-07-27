@@ -17,39 +17,29 @@ using System;
 namespace Microsoft.PSharp.Net
 {
     /// <summary>
-    /// The local P# network provider.
+    /// The local network provider.
     /// </summary>
     internal class LocalNetworkProvider : INetworkProvider
     {
-        #region fields
-
         /// <summary>
-        /// Instance of the P# runtime.
+        /// Instance of the state-machine runtime.
         /// </summary>
-        private PSharpRuntime Runtime;
+        private IStateMachineRuntime Runtime;
 
         /// <summary>
         /// The local endpoint.
         /// </summary>
         private string LocalEndpoint;
 
-        #endregion
-
-        #region constructors
-
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="runtime">PSharpRuntime</param>
-        public LocalNetworkProvider(PSharpRuntime runtime)
+        public LocalNetworkProvider(IStateMachineRuntime runtime)
         {
             this.Runtime = runtime;
             this.LocalEndpoint = "";
         }
-
-        #endregion
-
-        #region methods
 
         /// <summary>
         /// Creates a new remote machine of the specified type
@@ -91,7 +81,5 @@ namespace Microsoft.PSharp.Net
         /// Disposes the network provider.
         /// </summary>
         public void Dispose() { }
-
-        #endregion
     }
 }

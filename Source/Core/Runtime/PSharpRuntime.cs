@@ -26,7 +26,7 @@ namespace Microsoft.PSharp
     /// <summary>
     /// Runtime for executing state-machines.
     /// </summary>
-    public abstract class PSharpRuntime : IDisposable
+    internal abstract class PSharpRuntime : IStateMachineRuntime, IDisposable
     {
         #region fields
 
@@ -83,35 +83,6 @@ namespace Microsoft.PSharp
         /// </summary>
         public event OnFailureHandler OnFailure;
 
-        /// <summary>
-        /// Handles the <see cref="OnFailure"/> event.
-        /// </summary>
-        public delegate void OnFailureHandler(Exception ex);
-
-        #endregion
-
-        #region factory methods
-
-        /// <summary>
-        /// Creates a new state-machine runtime.
-        /// </summary>
-        /// <returns>Runtime</returns>
-        public static PSharpRuntime Create()
-        {
-            return new StateMachineRuntime();
-        }
-
-        /// <summary>
-        /// Creates a new state-machine runtime with the specified
-        /// <see cref="PSharp.Configuration"/>.
-        /// </summary>
-        /// <param name="configuration">Configuration</param>
-        /// <returns>Runtime</returns>
-        public static PSharpRuntime Create(Configuration configuration)
-        {
-            return new StateMachineRuntime(configuration);
-        }
-
         #endregion
 
         #region initialization
@@ -150,12 +121,6 @@ namespace Microsoft.PSharp
         #endregion
 
         #region runtime interface
-
-        /// <summary>
-        /// Gets the set of created machines
-        /// </summary>
-        /// <returns>The list of machine IDs</returns>
-        internal abstract HashSet<MachineId> GetCreatedMachines();
 
         /// <summary>
         /// Creates a fresh machine id that has not yet been bound to any machine.
@@ -312,17 +277,12 @@ namespace Microsoft.PSharp
         public abstract void InvokeMonitor(Type type, Event e);
 
         /// <summary>
-        /// Returns if the runtime is our test environment
+        /// Checks if the runtime is our test environment.
         /// </summary>
         /// <returns>true; if test and false otherwise</returns>
         internal virtual bool IsTest()
         {
             return false;
-        }
-
-        internal string GetFriendlyName(string type)
-        {
-            return typeCounter.AddOrUpdate(type, 0, UpdateCounter).ToString();
         }
 
         private ulong UpdateCounter(string key, ulong current)

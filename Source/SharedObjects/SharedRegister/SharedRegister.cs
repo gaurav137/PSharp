@@ -26,7 +26,7 @@ namespace Microsoft.PSharp.SharedObjects
         /// </summary>
         /// <param name="runtime">PSharpRuntime</param>
         /// <param name="value">Initial value</param>
-        public static ISharedRegister<T> Create<T>(PSharpRuntime runtime, T value = default(T)) where T : struct
+        public static ISharedRegister<T> Create<T>(IStateMachineRuntime runtime, T value = default(T)) where T : struct
         {
             if (runtime is StateMachineRuntime)
             {

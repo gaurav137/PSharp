@@ -145,7 +145,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
 
         private void AssertSucceeded(Type machine)
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -162,7 +162,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
 
         private void AssertFailed(Type machine)
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate

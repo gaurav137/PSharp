@@ -82,7 +82,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestSendAndExecuteNoDeadlockWithReceive()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(A), new Configure(false));
             });
 
@@ -93,7 +93,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public void TestSendAndExecuteDeadlockWithReceive()
         {
             var config = Configuration.Create().WithNumberOfIterations(10);
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(A), new Configure(true));
             });
 

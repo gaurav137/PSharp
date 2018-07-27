@@ -86,7 +86,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public void TestSyncSendToReceive()
         {
             var config = Configuration.Create().WithNumberOfIterations(1000);
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(A));
             });
 
@@ -97,7 +97,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         public void TestSyncSendSometimesDoesNotHandle()
         {
             var config = Configuration.Create().WithNumberOfIterations(1000);
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(C));
             });
 

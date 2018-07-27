@@ -25,7 +25,7 @@ namespace Microsoft.PSharp.Core.Tests.Performance
     {
         public partial class SimpleMachine
         {
-            private PSharpRuntime instance;
+            private IStateMachineRuntime instance;
             
             public SimpleMachine()
             {                
@@ -51,9 +51,9 @@ namespace Microsoft.PSharp.Core.Tests.Performance
 
         public class SetContextMessage : Event
         {
-            public PSharpRuntime runtime;
+            public IStateMachineRuntime runtime;
 
-            public SetContextMessage(PSharpRuntime runtime)
+            public SetContextMessage(IStateMachineRuntime runtime)
                 : base()
             {
                 this.runtime = runtime;

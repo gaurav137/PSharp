@@ -12,14 +12,14 @@ namespace Microsoft.PSharp.ServiceFabric.TestingServices
     /// <summary>
     /// Mock of IReliableStateManager
     /// </summary>
-    public class StateManagerMock : IReliableStateManager
+    public class MockStateManager : IReliableStateManager
     {
         /// <summary>
         /// The PSharp runtime
         /// </summary>
-        PSharpRuntime Runtime;
+        private IReliableStateMachineRuntime Runtime;
 
-        long TransactionCounter;
+        private long TransactionCounter;
 
         private ConcurrentDictionary<Uri, IReliableState> store = new ConcurrentDictionary<Uri, IReliableState>();
 
@@ -31,16 +31,21 @@ namespace Microsoft.PSharp.ServiceFabric.TestingServices
             { typeof(IReliableQueue<>), typeof(ReliableConcurrentQueueMock<>)}
         };
 
-        public StateManagerMock(PSharpRuntime runtime)
+        public MockStateManager(IReliableStateMachineRuntime runtime)
         {
             this.Runtime = runtime;
             this.TransactionCounter = 0;
         }
 
+        public void SetRuntime(IReliableStateMachineRuntime runtime)
+        {
+            this.Runtime = runtime;
+        }
+
         /// <summary>
         /// Disallows failures inside the mocked StateManager
         /// </summary>
-        public StateManagerMock DisallowFailures()
+        public MockStateManager DisallowFailures()
         {
             MockTransaction.AllowFailures = false;
             return this;

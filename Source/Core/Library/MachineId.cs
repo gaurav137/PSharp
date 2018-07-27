@@ -26,10 +26,11 @@ namespace Microsoft.PSharp
     public sealed class MachineId : IEquatable<MachineId>, IComparable<MachineId>
     {
         #region fields
+
         /// <summary>
-        /// The P# runtime that executes the machine with this id.
+        /// The runtime that executes the machine with this id.
         /// </summary>
-        public PSharpRuntime Runtime { get; private set; }
+        internal PSharpRuntime Runtime { get; private set; }
 
         /// <summary>
         /// Name of the machine.
@@ -75,7 +76,7 @@ namespace Microsoft.PSharp
         {
         }
 
-         /// <summary>
+        /// <summary>
         /// Creates a new machine id.
         /// </summary>
         /// <param name="type">Machine type string</param>
@@ -104,7 +105,7 @@ namespace Microsoft.PSharp
         }
 
         /// <summary>
-        /// Bind the machine id.
+        /// Binds this machine id to the specified runtime.
         /// </summary>
         /// <param name="runtime">PSharpRuntime</param>
         internal void Bind(PSharpRuntime runtime)

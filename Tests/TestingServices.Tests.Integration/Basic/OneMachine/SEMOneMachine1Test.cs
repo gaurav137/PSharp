@@ -64,7 +64,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Integration
         [Fact]
         public void TestSendRaiseInEntry()
         {
-            var test = new Action<PSharpRuntime>((r) => {
+            var test = new Action<IStateMachineRuntime>((r) => {
                 r.CreateMachine(typeof(Real1));
             });
 

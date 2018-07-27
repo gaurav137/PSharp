@@ -80,7 +80,7 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestSendCycleDoesNotDeadlock()
         {
-            var runtime = PSharpRuntime.Create();
+            var runtime = new StateMachineRuntime();
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate

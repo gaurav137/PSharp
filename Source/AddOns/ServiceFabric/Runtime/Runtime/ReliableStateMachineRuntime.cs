@@ -1,4 +1,18 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="ReliableStateMachineRuntime.cs">
+//      Copyright (c) Microsoft Corporation. All rights reserved.
+// 
+//      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+//      EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+//      MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+//      IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+//      CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+//      TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+//      SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// </copyright>
+//-----------------------------------------------------------------------
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +28,7 @@ using Microsoft.ServiceFabric.Data.Collections;
 
 namespace Microsoft.PSharp.ServiceFabric
 {
-    internal class ServiceFabricPSharpRuntime : StateMachineRuntime
+    internal class ReliableStateMachineRuntime : StateMachineRuntime, IReliableStateMachineRuntime
     {
         private const string CreatedMachinesDictionaryName = "CreatedMachines";
         private const string RemoteMessagesOutboxName = "RemoteMessagesOutbox";
@@ -55,15 +69,30 @@ namespace Microsoft.PSharp.ServiceFabric
         /// </summary>
         public IRemoteMachineManager RemoteMachineManager { get; }
 
-        internal ServiceFabricPSharpRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager)
+        #region runtime interface
+
+        /// <summary>
+        /// Returns the created machine ids.
+        /// </summary>
+        /// <returns>MachineIds</returns>
+        public HashSet<MachineId> GetCreatedMachineIds()
+        {
+            //TODO: Plumb in cancellation token
+            //TODO: Do not report halted machines - we need some way to delete the halted machines and clean up the IDs/queues
+            return this.GetCreatedMachinesAsync(CancellationToken.None).Result;
+        }
+
+        #endregion
+
+        internal ReliableStateMachineRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager)
             : this(stateManager, manager, Configuration.Create(), CancellationToken.None)
         { }
 
-        internal ServiceFabricPSharpRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager, Configuration configuration)
+        internal ReliableStateMachineRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager, Configuration configuration)
             : this(stateManager, manager, configuration, CancellationToken.None)
         { }
 
-        internal ServiceFabricPSharpRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager, Configuration configuration,
+        internal ReliableStateMachineRuntime(IReliableStateManager stateManager, IRemoteMachineManager manager, Configuration configuration,
             CancellationToken cancellationToken)
             : base(configuration)
         {
@@ -306,13 +335,6 @@ namespace Microsoft.PSharp.ServiceFabric
         }
 
         #endregion
-
-        internal override HashSet<MachineId> GetCreatedMachines()
-        {
-            //TODO: Plumb in cancellation token
-            //TODO: Do not report halted machines - we need some way to delete the halted machines and clean up the IDs/queues
-            return this.GetCreatedMachinesAsync(CancellationToken.None).Result;
-        }
 
         private async Task<HashSet<MachineId>> GetCreatedMachinesAsync(CancellationToken token)
         {
