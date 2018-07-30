@@ -773,7 +773,11 @@ namespace Microsoft.PSharp
         protected internal virtual Task NotifyProgress(Machine machine, params object[] args)
         {
             // Override to implement the notification.
+#if NET45
+            return Task.FromResult(0);
+#else
             return Task.CompletedTask;
+#endif
         }
 
         #endregion
