@@ -28,7 +28,7 @@ namespace Microsoft.PSharp
         /// <summary>
         /// The runtime that executes this machine.
         /// </summary>
-        internal PSharpRuntime Runtime { get; private set; }
+        internal BaseRuntime Runtime { get; private set; }
 
         /// <summary>
         /// The unique machine id.
@@ -74,11 +74,6 @@ namespace Microsoft.PSharp
                 return false;
             }
 
-            if(this.Runtime.IsTest())
-            {
-                return this.Id.Value == m.Id.Value;
-            }
-
             return this.Id.Equals(m.Id);
         }
 
@@ -88,11 +83,6 @@ namespace Microsoft.PSharp
         /// <returns>int</returns>
         public override int GetHashCode()
         {
-            if (this.Runtime.IsTest())
-            {
-                return this.Id.Value.GetHashCode();
-            }
-
             return this.Id.GetHashCode();
         }
 

@@ -43,7 +43,7 @@ namespace Microsoft.PSharp.IO
 
         /// <summary>
         /// Constructs the logger. The logger will be assigned the Runtime's Configuration
-        /// object when it is passed to <see cref="PSharpRuntime.SetLogger(ILogger)"/>.
+        /// object when it is passed to <see cref="Runtime.SetLogger(ILogger)"/>.
         /// </summary>
         /// <param name="loggingVerbosity">The initial logging verbosity level.</param>
         public StateMachineLogger(int loggingVerbosity = 2)

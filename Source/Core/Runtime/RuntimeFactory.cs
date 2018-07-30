@@ -25,7 +25,7 @@ namespace Microsoft.PSharp
         /// <returns>IStateMachineRuntime</returns>
         public static IStateMachineRuntime Create()
         {
-            return new StateMachineRuntime();
+            return new ProductionRuntime(Configuration.Create());
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Microsoft.PSharp
         /// <returns>IStateMachineRuntime</returns>
         public static IStateMachineRuntime Create(Configuration configuration)
         {
-            return new StateMachineRuntime(configuration);
+            return new ProductionRuntime(configuration);
         }
     }
 }

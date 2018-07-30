@@ -28,11 +28,11 @@ namespace Microsoft.PSharp.SharedObjects
         /// <param name="value">Initial value</param>
         public static ISharedCounter Create(IStateMachineRuntime runtime, int value = 0)
         {
-            if (runtime is StateMachineRuntime)
+            if (runtime is ProductionRuntime)
             {
                 return new ProductionSharedCounter(value);
             }
-            else if (runtime is TestingServices.BugFindingRuntime)
+            else if (runtime is BugFindingRuntime)
             {
                 return new MockSharedCounter(value, runtime as BugFindingRuntime);
             }

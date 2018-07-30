@@ -837,7 +837,7 @@ namespace Microsoft.PSharp
                 this.ReceivedEvent = nextEventInfo.Event;
 
                 // Handles next event.
-                await this.HandleEvent(nextEventInfo.Event);
+                await this.HandlingEvent(nextEventInfo.Event);
             }
 
             return completed;
@@ -847,7 +847,7 @@ namespace Microsoft.PSharp
         /// Handles the specified <see cref="Event"/>.
         /// </summary>
         /// <param name="e">Event to handle</param>
-        internal async Task HandleEvent(Event e)
+        internal async Task HandlingEvent(Event e)
         {
             base.Info.CurrentActionCalledTransitionStatement = false;
             var currentState = this.CurrentStateName;
@@ -865,7 +865,7 @@ namespace Microsoft.PSharp
                     }
 
                     var unhandledEx = new UnhandledEventException(this.Id, currentState, e, "Unhandled Event");
-                    if (OnUnhandledEventExceptionHandler("HandleEvent", unhandledEx))
+                    if (OnUnhandledEventExceptionHandler("HandlingEvent", unhandledEx))
                     {
                         this.HaltMachine();
                         return;
@@ -1401,14 +1401,7 @@ namespace Microsoft.PSharp
                 var hash = 19;
 
                 hash = hash * 31 + this.GetType().GetHashCode();
-                if (this.Runtime.IsTest())
-                {
-                    hash = hash * 31 + base.Id.Value.GetHashCode();
-                }
-                else
-                {
-                    hash = hash * 31 + base.Id.GetHashCode();
-                }
+                hash = hash * 31 + base.Id.GetHashCode();
                 hash = hash * 31 + this.IsRunning.GetHashCode();
 
                 hash = hash * 31 + this.Info.IsHalted.GetHashCode();

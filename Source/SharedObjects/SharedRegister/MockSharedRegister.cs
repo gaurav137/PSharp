@@ -37,10 +37,10 @@ namespace Microsoft.PSharp.SharedObjects
         /// Initializes the shared register.
         /// </summary>
         /// <param name="value">Initial value</param>
-        /// <param name="Runtime">Runtime</param>
-        public MockSharedRegister(T value, BugFindingRuntime Runtime)
+        /// <param name="runtime">Runtime</param>
+        public MockSharedRegister(T value, BugFindingRuntime runtime)
         {
-            this.Runtime = Runtime;
+            this.Runtime = runtime;
             registerMachine = Runtime.CreateMachine(typeof(SharedRegisterMachine<T>));
             Runtime.SendEvent(registerMachine, SharedRegisterEvent.SetEvent(value));
         }

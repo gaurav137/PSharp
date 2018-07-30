@@ -57,7 +57,7 @@ namespace Microsoft.PSharp
         /// <summary>
         /// The runtime that executes this monitor.
         /// </summary>
-        private PSharpRuntime Runtime;
+        private BaseRuntime Runtime;
 
         /// <summary>
         /// The monitor state.
@@ -259,7 +259,7 @@ namespace Microsoft.PSharp
             EventInfo raisedEvent = new EventInfo(e, new EventOriginInfo(
                 this.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
             this.Runtime.NotifyRaisedEvent(this, raisedEvent);
-            this.HandleEvent(e);
+            this.HandlingEvent(e);
         }
 
         /// <summary>
@@ -296,7 +296,7 @@ namespace Microsoft.PSharp
         {
             this.Runtime.Logger.OnMonitorEvent(this.GetType().Name, this.Id, this.CurrentStateName,
                 e.GetType().FullName, isProcessing: true);
-            this.HandleEvent(e);
+            this.HandlingEvent(e);
         }
 
         #endregion
@@ -307,7 +307,7 @@ namespace Microsoft.PSharp
         /// Handles the given event.
         /// </summary>
         /// <param name="e">Event to handle</param>
-        private void HandleEvent(Event e)
+        private void HandlingEvent(Event e)
         {
             this.CurrentActionCalledTransitionStatement = false;
 

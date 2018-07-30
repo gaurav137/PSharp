@@ -56,7 +56,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
         /// <returns>BugFindingEngine</returns>
-        public static BugFindingEngine Create(Configuration configuration, Action<PSharpRuntime> action)
+        public static BugFindingEngine Create(Configuration configuration, Action<Runtime> action)
         {
             return new BugFindingEngine(configuration, action);
         }
@@ -183,7 +183,7 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
-        private BugFindingEngine(Configuration configuration, Action<PSharpRuntime> action)
+        private BugFindingEngine(Configuration configuration, Action<Runtime> action)
             : base(configuration, action)
         {
             if (base.Configuration.EnableDataRaceDetection)

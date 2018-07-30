@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="Runtime.cs">
+// <copyright file="BaseRuntime.cs">
 //      Copyright (c) Microsoft Corporation. All rights reserved.
 // 
 //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -24,12 +24,10 @@ using System.Threading.Tasks;
 namespace Microsoft.PSharp
 {
     /// <summary>
-    /// Runtime for executing state-machines.
+    /// The base P# runtime.
     /// </summary>
-    internal abstract class PSharpRuntime : IStateMachineRuntime, IDisposable
+    internal abstract class BaseRuntime : IPSharpRuntime
     {
-        #region fields
-
         /// <summary>
         /// Monotonically increasing machine id counter.
         /// </summary>
@@ -60,10 +58,6 @@ namespace Microsoft.PSharp
         /// </summary>
         private Type TimerMachineType = null;
 
-        #endregion
-
-        #region properties
-
         /// <summary>
         /// Network provider used for remote communication.
         /// </summary>
@@ -74,33 +68,16 @@ namespace Microsoft.PSharp
         /// </summary>
         public ILogger Logger { get; private set; }
 
-        #endregion
-
-        #region events
-
         /// <summary>
         /// Event that is fired when the P# program throws an exception.
         /// </summary>
         public event OnFailureHandler OnFailure;
 
-        #endregion
-
-        #region initialization
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        protected PSharpRuntime()
-        {
-            this.Configuration = Configuration.Create();
-            this.Initialize();
-        }
-
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        protected PSharpRuntime(Configuration configuration)
+        protected BaseRuntime(Configuration configuration)
         {
             this.Configuration = configuration;
             this.Initialize();
@@ -112,149 +89,14 @@ namespace Microsoft.PSharp
         private void Initialize()
         {
             this.MachineMap = new ConcurrentDictionary<MachineId, Machine>();
-            this.NetworkProvider = new LocalNetworkProvider(this);
+            // TODO: fix
+            this.NetworkProvider = new LocalNetworkProvider(this as IStateMachineRuntime);
             this.SetLogger(new ConsoleLogger());
             this.IsRunning = true;
             this.typeCounter = new ConcurrentDictionary<string, ulong>();
         }
 
-        #endregion
-
         #region runtime interface
-
-        /// <summary>
-        /// Creates a fresh machine id that has not yet been bound to any machine.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <returns>MachineId</returns>
-
-        public MachineId CreateMachineId(Type type, string friendlyName = null) => new MachineId(type, friendlyName, this);
-
-        /// <summary>
-        /// Creates a new machine of the specified <see cref="Type"/> and with
-        /// the specified optional <see cref="Event"/>. This event can only be
-        /// used to access its payload, and cannot be handled.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="e">Event</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        /// <returns>MachineId</returns>
-        public abstract MachineId CreateMachine(Type type, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Creates a new machine of the specified <see cref="Type"/>, using the specified
-        /// machine id, and passes the specified optional <see cref="Event"/>. This
-        /// event can only be used to access its payload, and cannot be handled.
-        /// </summary>
-        /// <param name="mid">Unbound machine id</param>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="e">Event</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        public abstract void CreateMachine(MachineId mid, Type type, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Creates a new machine of the specified <see cref="Type"/> and name, and
-        /// with the specified optional <see cref="Event"/>. This event can only be
-        /// used to access its payload, and cannot be handled.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        /// <param name="e">Event</param>
-        /// <returns>MachineId</returns>
-        public abstract MachineId CreateMachine(Type type, string friendlyName, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Creates a new machine of the specified <see cref="Type"/> and with the
-        /// specified optional <see cref="Event"/>. This event can only be used to
-        /// access its payload, and cannot be handled. The method returns only when
-        /// the machine is initialized and the <see cref="Event"/> (if any) is handled.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="e">Event</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        /// <returns>MachineId</returns>
-        public abstract Task<MachineId> CreateMachineAndExecute(Type type, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Creates a new machine of the specified <see cref="Type"/>, using the specified
-        /// unbound machine id, and passes the specified optional <see cref="Event"/>. This
-        /// event can only be used to access its payload, and cannot be handled. The method
-        /// returns only when the machine is initialized and the <see cref="Event"/> (if any)
-        /// is handled.
-        /// </summary>
-        /// <param name="mid">Unbound machine id</param>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="e">Event</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        public abstract Task CreateMachineAndExecute(MachineId mid, Type type, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Creates a new machine of the specified <see cref="Type"/> and name, and with
-        /// the specified optional <see cref="Event"/>. This event can only be used to
-        /// access its payload, and cannot be handled. The method returns only when the
-        /// machine is initialized and the <see cref="Event"/> (if any) is handled.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        /// <param name="e">Event</param>
-        /// <returns>MachineId</returns>
-        public abstract Task<MachineId> CreateMachineAndExecute(Type type, string friendlyName, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Creates a new remote machine of the specified <see cref="Type"/> and with
-        /// the specified optional <see cref="Event"/>. This event can only be used
-        /// to access its payload, and cannot be handled.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="endpoint">Endpoint</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        /// <param name="e">Event</param>
-        /// <returns>MachineId</returns>
-        public abstract MachineId RemoteCreateMachine(Type type, string endpoint, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Creates a new remote machine of the specified <see cref="Type"/> and name, and
-        /// with the specified optional <see cref="Event"/>. This event can only be used
-        /// to access its payload, and cannot be handled.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <param name="endpoint">Endpoint</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        /// <param name="e">Event</param>
-        /// <returns>MachineId</returns>
-        public abstract MachineId RemoteCreateMachine(Type type, string friendlyName,
-            string endpoint, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Sends an asynchronous <see cref="Event"/> to a machine.
-        /// </summary>
-        /// <param name="target">Target machine id</param>
-        /// <param name="e">Event</param>
-        /// <param name="options">Optional parameters of a send operation.</param>
-        public abstract void SendEvent(MachineId target, Event e, SendOptions options = null);
-
-        /// <summary>
-        /// Sends an <see cref="Event"/> to a machine. Returns immediately
-        /// if the target machine was already running. Otherwise blocks until the machine handles
-        /// the event and reaches quiescense again.
-        /// </summary>
-        /// <param name="target">Target machine id</param>
-        /// <param name="e">Event</param>
-        /// <param name="options">Optional parameters of a send operation.</param>
-        /// <returns>True if event was handled, false if the event was only enqueued</returns>
-        public abstract Task<bool> SendEventAndExecute(MachineId target, Event e, SendOptions options = null);
-
-        /// <summary>
-        /// Sends an asynchronous <see cref="Event"/> to a remote machine.
-        /// </summary>
-        /// <param name="target">Target machine id</param>
-        /// <param name="e">Event</param>
-        /// <param name="options">Optional parameters of a send operation.</param>
-        public abstract void RemoteSendEvent(MachineId target, Event e, SendOptions options = null);
 
         /// <summary>
         /// Registers a new specification monitor of the specified <see cref="Type"/>.
@@ -275,15 +117,6 @@ namespace Microsoft.PSharp
         /// <param name="type">Type of the monitor</param>
         /// <param name="e">Event</param>
         public abstract void InvokeMonitor(Type type, Event e);
-
-        /// <summary>
-        /// Checks if the runtime is our test environment.
-        /// </summary>
-        /// <returns>true; if test and false otherwise</returns>
-        internal virtual bool IsTest()
-        {
-            return false;
-        }
 
         private ulong UpdateCounter(string key, ulong current)
         {
@@ -341,8 +174,6 @@ namespace Microsoft.PSharp
 
         #endregion
 
-        #region protected methods
-
         /// <summary>
         /// Gets the target machine for an event; if not found, logs a halted-machine entry.
         /// </summary>
@@ -365,56 +196,6 @@ namespace Microsoft.PSharp
             return true;
         }
 
-        #endregion
-
-        #region state-machine execution
-
-        /// <summary>
-        /// Creates a new <see cref="Machine"/> of the specified <see cref="Type"/>.
-        /// </summary>
-        /// <param name="mid">Unbound machine id</param>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <param name="operationGroupId">Operation group id</param>
-        /// <param name="e">Event passed during machine construction</param>
-        /// <param name="creator">Creator machine</param>
-        /// <returns>MachineId</returns>
-        protected internal abstract MachineId CreateMachine(MachineId mid, Type type, string friendlyName, Event e, Machine creator, Guid? operationGroupId);
-
-        /// <summary>
-        /// Creates a new <see cref="Machine"/> of the specified <see cref="Type"/>. The
-        /// method returns only when the machine is initialized and the <see cref="Event"/>
-        /// (if any) is handled.
-        /// </summary>
-        /// <param name="mid">Unbound machine id</param>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <param name="e">Event passed during machine construction</param>
-        /// <param name="operationGroupId">Operation group id</param>
-        /// <param name="creator">Creator machine</param>
-        /// <returns>MachineId</returns>
-        protected internal abstract Task<MachineId> CreateMachineAndExecute(MachineId mid, Type type, string friendlyName, Event e, Machine creator, Guid? operationGroupId);
-
-        /// <summary>
-        /// Creates a new remote <see cref="Machine"/> of the specified <see cref="System.Type"/>.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <param name="endpoint">Endpoint</param>
-        /// <param name="operationGroupId">Operation group id</param>
-        /// <param name="e">Event passed during machine construction</param>
-        /// <param name="creator">Creator machine</param>
-        /// <returns>MachineId</returns>
-        protected internal abstract MachineId CreateRemoteMachine(Type type, string friendlyName, string endpoint,
-            Event e, Machine creator, Guid? operationGroupId);
-
-        /// <summary>
-        /// Creates a new P# machine of the specified type.
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Machine</returns>
-        protected abstract Machine CreateMachine(Type type);
-
         /// <summary>
         /// Checks if the constructor of the specified machine type exists in the cache.
         /// </summary>
@@ -424,36 +205,6 @@ namespace Microsoft.PSharp
         {
             return false;
         }
-
-        /// <summary>
-        /// Sends an asynchronous <see cref="Event"/> to a machine.
-        /// </summary>
-        /// <param name="mid">MachineId</param>
-        /// <param name="e">Event</param>
-        /// <param name="sender">Sender machine</param>
-        /// <param name="options">Optional parameters of a send operation.</param>
-        protected internal abstract void SendEvent(MachineId mid, Event e, AbstractMachine sender, SendOptions options);
-
-        /// <summary>
-        /// Sends an asynchronous <see cref="Event"/> to a machine. Returns immediately
-        /// if the target machine was already running. Otherwise blocks until the machine handles
-        /// the event and reaches quiescense again.
-        /// </summary>
-        /// <param name="mid">MachineId</param>
-        /// <param name="e">Event</param>
-        /// <param name="sender">Sender machine</param>
-        /// <param name="options">Optional parameters of a send operation.</param>
-        /// <returns>True if event was handled, false if the event was only enqueued</returns>
-        protected internal abstract Task<bool> SendEventAndExecute(MachineId mid, Event e, AbstractMachine sender, SendOptions options);
-
-        /// <summary>
-        /// Sends an asynchronous <see cref="Event"/> to a remote machine.
-        /// </summary>
-        /// <param name="mid">MachineId</param>
-        /// <param name="e">Event</param>
-        /// <param name="sender">Sender machine</param>
-        /// <param name="options">Optional parameters of a send operation.</param>
-        protected internal abstract void SendEventRemotely(MachineId mid, Event e, AbstractMachine sender, SendOptions options);
 
         /// <summary>
         /// Checks that a machine can start its event handler. Returns false if the event
@@ -467,9 +218,7 @@ namespace Microsoft.PSharp
             return true;
         }
 
-        #endregion
-
-        #region Timers
+        #region timers
 
         /// <summary>
         /// Overrides the machine type for instantiating timers
@@ -890,7 +639,8 @@ namespace Microsoft.PSharp
         public void RemoveNetworkProvider()
         {
             this.NetworkProvider.Dispose();
-            this.NetworkProvider = new LocalNetworkProvider(this);
+            // TODO: fix
+            this.NetworkProvider = new LocalNetworkProvider(this as IStateMachineRuntime);
         }
 
         #endregion
@@ -940,6 +690,5 @@ namespace Microsoft.PSharp
         }
 
         #endregion
-
     }
 }

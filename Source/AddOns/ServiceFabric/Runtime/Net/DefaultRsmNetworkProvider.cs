@@ -38,7 +38,5 @@ namespace Microsoft.PSharp.ServiceFabric.Net
             Runtime.SendEvent(target, e);
             return Task.CompletedTask;
         }
-
     }
-
 }

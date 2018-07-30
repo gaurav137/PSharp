@@ -12,37 +12,17 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using Microsoft.PSharp.IO;
-using Microsoft.PSharp.Net;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.PSharp
 {
     /// <summary>
-    /// Interface of a runtime for executing state-machines.
+    /// The interface of the P# runtime. It provides APIs for creating and executing
+    /// state-machines, sending events, as well as various other runtime utilities.
     /// </summary>
-    public interface IStateMachineRuntime
+    public interface IStateMachineRuntime : IPSharpRuntime
     {
-        /// <summary>
-        /// Network provider used for remote communication.
-        /// </summary>
-        INetworkProvider NetworkProvider { get; }
-
-        /// <summary>
-        /// The installed logger.
-        /// </summary>
-        ILogger Logger { get; }
-
-        /// <summary>
-        /// Event that is fired when the P# program throws an exception.
-        /// </summary>
-        event OnFailureHandler OnFailure;
-
         /// <summary>
         /// Creates a fresh machine id that has not yet been bound to any machine.
         /// </summary>
@@ -87,6 +67,69 @@ namespace Microsoft.PSharp
         MachineId CreateMachine(Type type, string friendlyName, Event e = null, Guid? operationGroupId = null);
 
         /// <summary>
+        /// Creates a new machine of the specified <see cref="Type"/> and with the
+        /// specified optional <see cref="Event"/>. This event can only be used to
+        /// access its payload, and cannot be handled. The method returns only when
+        /// the machine is initialized and the <see cref="Event"/> (if any) is handled.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="e">Event</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        /// <returns>MachineId</returns>
+        Task<MachineId> CreateMachineAndExecute(Type type, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Creates a new machine of the specified <see cref="Type"/>, using the specified
+        /// unbound machine id, and passes the specified optional <see cref="Event"/>. This
+        /// event can only be used to access its payload, and cannot be handled. The method
+        /// returns only when the machine is initialized and the <see cref="Event"/> (if any)
+        /// is handled.
+        /// </summary>
+        /// <param name="mid">Unbound machine id</param>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="e">Event</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        Task CreateMachineAndExecute(MachineId mid, Type type, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Creates a new machine of the specified <see cref="Type"/> and name, and with
+        /// the specified optional <see cref="Event"/>. This event can only be used to
+        /// access its payload, and cannot be handled. The method returns only when the
+        /// machine is initialized and the <see cref="Event"/> (if any) is handled.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="friendlyName">Friendly machine name used for logging</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        /// <param name="e">Event</param>
+        /// <returns>MachineId</returns>
+        Task<MachineId> CreateMachineAndExecute(Type type, string friendlyName, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Creates a new remote machine of the specified <see cref="Type"/> and with
+        /// the specified optional <see cref="Event"/>. This event can only be used
+        /// to access its payload, and cannot be handled.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="endpoint">Endpoint</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        /// <param name="e">Event</param>
+        /// <returns>MachineId</returns>
+        MachineId RemoteCreateMachine(Type type, string endpoint, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Creates a new remote machine of the specified <see cref="Type"/> and name, and
+        /// with the specified optional <see cref="Event"/>. This event can only be used
+        /// to access its payload, and cannot be handled.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="friendlyName">Friendly machine name used for logging</param>
+        /// <param name="endpoint">Endpoint</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        /// <param name="e">Event</param>
+        /// <returns>MachineId</returns>
+        MachineId RemoteCreateMachine(Type type, string friendlyName, string endpoint, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
         /// Sends an asynchronous <see cref="Event"/> to a machine.
         /// </summary>
         /// <param name="target">Target machine id</param>
@@ -95,76 +138,22 @@ namespace Microsoft.PSharp
         void SendEvent(MachineId target, Event e, SendOptions options = null);
 
         /// <summary>
-        /// Registers a new specification monitor of the specified <see cref="Type"/>.
+        /// Sends an <see cref="Event"/> to a machine. Returns immediately
+        /// if the target machine was already running. Otherwise blocks until the machine handles
+        /// the event and reaches quiescense again.
         /// </summary>
-        /// <param name="type">Type of the monitor</param>
-        void RegisterMonitor(Type type);
-
-        /// <summary>
-        /// Invokes the specified monitor with the specified <see cref="Event"/>.
-        /// </summary>
-        /// <typeparam name="T">Type of the monitor</typeparam>
+        /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        void InvokeMonitor<T>(Event e);
+        /// <param name="options">Optional parameters of a send operation.</param>
+        /// <returns>True if event was handled, false if the event was only enqueued</returns>
+        Task<bool> SendEventAndExecute(MachineId target, Event e, SendOptions options = null);
 
         /// <summary>
-        /// Invokes the specified monitor with the specified <see cref="Event"/>.
+        /// Sends an asynchronous <see cref="Event"/> to a remote machine.
         /// </summary>
-        /// <param name="type">Type of the monitor</param>
+        /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
-        void InvokeMonitor(Type type, Event e);
-
-        /// <summary>
-        /// Returns a nondeterministic boolean choice, that can be controlled
-        /// during analysis or testing.
-        /// </summary>
-        /// <returns>Boolean</returns>
-        bool Random();
-
-        /// <summary>
-        /// Returns a nondeterministic boolean choice, that can be controlled
-        /// during analysis or testing. The value is used to generate a number
-        /// in the range [0..maxValue), where 0 triggers true.
-        /// </summary>
-        /// <param name="maxValue">Max value</param>
-        /// <returns>Boolean</returns>
-        bool Random(int maxValue);
-
-        /// <summary>
-        /// Returns a nondeterministic integer choice, that can be
-        /// controlled during analysis or testing. The value is used
-        /// to generate an integer in the range [0..maxValue).
-        /// </summary>
-        /// <param name="maxValue">Max value</param>
-        /// <returns>Integer</returns>
-        int RandomInteger(int maxValue);
-
-        /// <summary>
-        /// Checks if the assertion holds, and if not it throws an
-        /// <see cref="AssertionFailureException"/> exception.
-        /// </summary>
-        /// <param name="predicate">Predicate</param>
-        void Assert(bool predicate);
-
-        /// <summary>
-        /// Checks if the assertion holds, and if not it throws an
-        /// <see cref="AssertionFailureException"/> exception.
-        /// </summary>
-        /// <param name="predicate">Predicate</param>
-        /// <param name="s">Message</param>
-        /// <param name="args">Message arguments</param>
-        void Assert(bool predicate, string s, params object[] args);
-
-        /// <summary>
-        /// Installs the specified <see cref="ILogger"/>.
-        /// </summary>
-        /// <param name="logger">ILogger</param>
-        void SetLogger(ILogger logger);
-
-        /// <summary>
-        /// Removes the currently installed <see cref="ILogger"/>, and replaces
-        /// it with the default <see cref="ILogger"/>.
-        /// </summary>
-        void RemoveLogger();
+        /// <param name="options">Optional parameters of a send operation.</param>
+        void RemoteSendEvent(MachineId target, Event e, SendOptions options = null);
     }
 }

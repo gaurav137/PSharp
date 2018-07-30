@@ -26,14 +26,14 @@ namespace Microsoft.PSharp.SharedObjects
         /// <summary>
         /// Creates a new shared dictionary.
         /// </summary>
-        /// <param name="runtime">PSharpRuntime</param>
+        /// <param name="runtime">IStateMachineRuntime</param>
         public static ISharedDictionary<TKey, TValue> Create<TKey, TValue>(IStateMachineRuntime runtime)
         {
-            if (runtime is StateMachineRuntime)
+            if (runtime is ProductionRuntime)
             {
                 return new ProductionSharedDictionary<TKey, TValue>();
             }
-            else if (runtime is TestingServices.BugFindingRuntime)
+            else if (runtime is BugFindingRuntime)
             {
                 return new MockSharedDictionary<TKey, TValue>(null, runtime as BugFindingRuntime);
             }
@@ -47,14 +47,14 @@ namespace Microsoft.PSharp.SharedObjects
         /// Creates a new shared dictionary.
         /// </summary>
         /// <param name="comparer">Comparer for keys</param>
-        /// <param name="runtime">PSharp runtime</param>
+        /// <param name="runtime">IStateMachineRuntime</param>
         public static ISharedDictionary<TKey, TValue> Create<TKey, TValue>(IEqualityComparer<TKey> comparer, IStateMachineRuntime runtime)
         {
-            if (runtime is StateMachineRuntime)
+            if (runtime is ProductionRuntime)
             {
                 return new ProductionSharedDictionary<TKey, TValue>(comparer);
             }
-            else if (runtime is TestingServices.BugFindingRuntime)
+            else if (runtime is BugFindingRuntime)
             {
                 return new MockSharedDictionary<TKey, TValue>(comparer, runtime as BugFindingRuntime);
             }

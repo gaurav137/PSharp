@@ -25,12 +25,10 @@ namespace Microsoft.PSharp
     [DataContract]
     public sealed class MachineId : IEquatable<MachineId>, IComparable<MachineId>
     {
-        #region fields
-
         /// <summary>
         /// The runtime that executes the machine with this id.
         /// </summary>
-        internal PSharpRuntime Runtime { get; private set; }
+        internal BaseRuntime Runtime { get; private set; }
 
         /// <summary>
         /// Name of the machine.
@@ -62,16 +60,13 @@ namespace Microsoft.PSharp
         [DataMember]
         public readonly string Endpoint;
 
-        #endregion
-
-        #region constructors
         /// <summary>
         /// Creates a new machine id.
         /// </summary>
         /// <param name="type">Machine type</param>
         /// <param name="friendlyName">Friendly machine name</param>
-        /// <param name="runtime">PSharpRuntime</param>
-        internal MachineId(Type type, string friendlyName, PSharpRuntime runtime) 
+        /// <param name="runtime">BaseRuntime</param>
+        internal MachineId(Type type, string friendlyName, BaseRuntime runtime) 
             : this(type.FullName, friendlyName, runtime)
         {
         }
@@ -81,8 +76,8 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="type">Machine type string</param>
         /// <param name="friendlyName">Friendly machine name</param>
-        /// <param name="runtime">PSharpRuntime</param>
-        internal MachineId(string type, string friendlyName, PSharpRuntime runtime)
+        /// <param name="runtime">BaseRuntime</param>
+        internal MachineId(string type, string friendlyName, BaseRuntime runtime)
         {
             Type = type;
             Runtime = runtime;
@@ -107,15 +102,11 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Binds this machine id to the specified runtime.
         /// </summary>
-        /// <param name="runtime">PSharpRuntime</param>
-        internal void Bind(PSharpRuntime runtime)
+        /// <param name="runtime">BaseRuntime</param>
+        internal void Bind(BaseRuntime runtime)
         {
             Runtime = runtime;
         }
-
-        #endregion
-
-        #region generic public and override methods
 
         /// <summary>
         /// Determines whether the specified System.Object is equal
@@ -166,16 +157,7 @@ namespace Microsoft.PSharp
 
         public int CompareTo(MachineId other)
         {
-            if (Runtime != null && Runtime.IsTest())
-            {
-                return Value.CompareTo(other.Value);
-            }
-            else
-            {
-                return string.Compare(this.Name, other == null ? null : other.Name);
-            }
+            return string.Compare(this.Name, other == null ? null : other.Name);
         }
-
-        #endregion
     }
 }

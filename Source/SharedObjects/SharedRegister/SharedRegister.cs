@@ -24,15 +24,15 @@ namespace Microsoft.PSharp.SharedObjects
         /// <summary>
         /// Creates a new shared register.
         /// </summary>
-        /// <param name="runtime">PSharpRuntime</param>
+        /// <param name="runtime">IStateMachineRuntime</param>
         /// <param name="value">Initial value</param>
         public static ISharedRegister<T> Create<T>(IStateMachineRuntime runtime, T value = default(T)) where T : struct
         {
-            if (runtime is StateMachineRuntime)
+            if (runtime is ProductionRuntime)
             {
                 return new ProductionSharedRegister<T>(value);
             }
-            else if (runtime is TestingServices.BugFindingRuntime)
+            else if (runtime is BugFindingRuntime)
             {
                 return new MockSharedRegister<T>(value, runtime as BugFindingRuntime);
             }

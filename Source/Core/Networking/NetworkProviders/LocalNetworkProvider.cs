@@ -34,7 +34,7 @@ namespace Microsoft.PSharp.Net
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">PSharpRuntime</param>
+        /// <param name="runtime">IStateMachineRuntime</param>
         public LocalNetworkProvider(IStateMachineRuntime runtime)
         {
             this.Runtime = runtime;
