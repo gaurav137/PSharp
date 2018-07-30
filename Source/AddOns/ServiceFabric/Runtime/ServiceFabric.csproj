@@ -7,7 +7,6 @@
     <AssemblyTitle>Microsoft.PSharp.ServiceFabric</AssemblyTitle>
     <TargetFrameworks>net46</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <PackageTags>state-machines;dotnet;csharp;azure;service-fabric</PackageTags>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
@@ -24,9 +23,13 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Core\Core.csproj" />
+    <ProjectReference Include="..\..\..\TestingServices\TestingServices.csproj" />
     <!-- Ideally we want this to be pluggable via some abstraction but for Hackathon sake adding a project reference -->
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.ServiceModel" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>

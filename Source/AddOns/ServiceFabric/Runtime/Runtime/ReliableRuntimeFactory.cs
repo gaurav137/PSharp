@@ -14,6 +14,8 @@
 
 using System;
 using System.Threading;
+using Microsoft.PSharp.TestingServices;
+using Microsoft.PSharp.TestingServices.SchedulingStrategies;
 using Microsoft.ServiceFabric.Data;
 
 namespace Microsoft.PSharp.ServiceFabric
@@ -109,6 +111,17 @@ namespace Microsoft.PSharp.ServiceFabric
         public static IReliableStateMachineRuntime CreateLocal(IReliableStateManager stateManager, Configuration configuration)
         {
             return Create(stateManager, new SingleProcessMachineManager(), configuration, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Creates a P# reliable state-machine runtime that executes in bug-finding mode.
+        /// </summary>
+        /// <returns>Runtime</returns>
+        [TestRuntimeCreate]
+        internal static BugFindingRuntime Create(Configuration configuration,
+            ISchedulingStrategy strategy, IRegisterRuntimeOperation reporter)
+        {
+            return new TestingServices.BugFindingRuntime(configuration, strategy, reporter);
         }
     }
 }
