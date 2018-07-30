@@ -179,7 +179,8 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCalledOnce1()
         {
-            var runtime = new StateMachineRuntime();
+            var configuration = Configuration.Create();
+            var runtime = new ProductionRuntime(configuration);
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -199,7 +200,8 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCalledOnce2()
         {
-            var runtime = new StateMachineRuntime();
+            var configuration = Configuration.Create();
+            var runtime = new ProductionRuntime(configuration);
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -219,7 +221,8 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCalledOnceAsync1()
         {
-            var runtime = new StateMachineRuntime();
+            var configuration = Configuration.Create();
+            var runtime = new ProductionRuntime(configuration);
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -239,7 +242,8 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCalledOnceAsync2()
         {
-            var runtime = new StateMachineRuntime();
+            var configuration = Configuration.Create();
+            var runtime = new ProductionRuntime(configuration);
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -259,7 +263,8 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestOnExceptionCanHalt()
         {
-            var runtime = new StateMachineRuntime();
+            var configuration = Configuration.Create();
+            var runtime = new ProductionRuntime(configuration);
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate
@@ -279,7 +284,8 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestUnHandledEventCanHalt()
         {
-            var runtime = new StateMachineRuntime();
+            var configuration = Configuration.Create();
+            var runtime = new ProductionRuntime(configuration);
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate

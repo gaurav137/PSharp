@@ -102,7 +102,7 @@ namespace Microsoft.PSharp.SharedObjects.Tests.Unit
         [Fact]
         public void TestDictionaryCount()
         {
-            var runtime = new StateMachineRuntime();
+            var runtime = new ProductionRuntime();
             var dictionary = SharedDictionary.Create<int, string>(runtime);
             var counter = SharedCounter.Create(runtime);
             var tcs1 = new TaskCompletionSource<bool>();

@@ -103,10 +103,10 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestMachineHaltsOnSendExec()
         {
-            var config = Configuration.Create();
-            config.EnableMonitorsInProduction = true;
+            var configuration = Configuration.Create();
+            configuration.EnableMonitorsInProduction = true;
 
-            var runtime = new StateMachineRuntime(config);
+            var runtime = new ProductionRuntime(configuration);
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             runtime.OnFailure += delegate

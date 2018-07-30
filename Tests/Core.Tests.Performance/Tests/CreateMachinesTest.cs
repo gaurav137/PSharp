@@ -60,7 +60,8 @@ namespace Microsoft.PSharp.Core.Tests.Performance
         [Benchmark]
         public void CreateMachines()
         {
-            var runtime = new StateMachineRuntime();
+            var configuration = Configuration.Create();
+            var runtime = new ProductionRuntime(configuration);
 
             var tcs = new TaskCompletionSource<bool>();
             Node.Configure evt = new Node.Configure(tcs, Size);

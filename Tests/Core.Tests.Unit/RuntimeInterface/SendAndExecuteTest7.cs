@@ -64,7 +64,8 @@ namespace Microsoft.PSharp.Core.Tests.Unit
         [Fact]
         public void TestUnhandledEventOnSendExec()
         {
-            var runtime = new StateMachineRuntime();
+            var configuration = Configuration.Create();
+            var runtime = new ProductionRuntime(configuration);
             var failed = false;
             var tcs = new TaskCompletionSource<bool>();
             var message = "";
