@@ -42,7 +42,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         {
             [Start]
             [OnEntry(nameof(InitOnEntry))]
-            [OnEventDoAction(typeof(E), nameof(HandleEvent))]
+            [OnEventDoAction(typeof(E), nameof(HandlingEvent))]
             class Init : MachineState { }
 
             void InitOnEntry()
@@ -50,7 +50,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
                 Engine.Send(this.Runtime, this.Id);
             }
 
-            void HandleEvent()
+            void HandlingEvent()
             {
                 this.Assert((this.ReceivedEvent as E).Value == 2);
             }
