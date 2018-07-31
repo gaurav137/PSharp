@@ -49,11 +49,6 @@ namespace Microsoft.PSharp
         protected ConcurrentDictionary<MachineId, Machine> MachineMap;
 
         /// <summary>
-        /// Counter for each type of object in that runtime
-        /// </summary>
-        internal ConcurrentDictionary<string, ulong> typeCounter;
-
-        /// <summary>
         /// Type of Timer machine (used by TMachine)
         /// </summary>
         private Type TimerMachineType = null;
@@ -88,12 +83,12 @@ namespace Microsoft.PSharp
         /// </summary>
         private void Initialize()
         {
+            this.MachineIdCounter = 0;
             this.MachineMap = new ConcurrentDictionary<MachineId, Machine>();
             // TODO: fix
             this.NetworkProvider = new LocalNetworkProvider(this as BaseMachineRuntime);
             this.SetLogger(new ConsoleLogger());
             this.IsRunning = true;
-            this.typeCounter = new ConcurrentDictionary<string, ulong>();
         }
 
         #region runtime interface
@@ -117,11 +112,6 @@ namespace Microsoft.PSharp
         /// <param name="type">Type of the monitor</param>
         /// <param name="e">Event</param>
         public abstract void InvokeMonitor(Type type, Event e);
-
-        private ulong UpdateCounter(string key, ulong current)
-        {
-            return current + 1;
-        }
 
         /// <summary>
         /// Returns a nondeterministic boolean choice, that can be controlled
@@ -173,50 +163,6 @@ namespace Microsoft.PSharp
         public abstract void Stop();
 
         #endregion
-
-        /// <summary>
-        /// Gets the target machine for an event; if not found, logs a halted-machine entry.
-        /// </summary>
-        /// <param name="targetMachineId">The id of target machine.</param>
-        /// <param name="e">The event that will be sent.</param>
-        /// <param name="sender">The machine that is sending the event.</param>
-        /// <param name="operationGroupId">The operation group id.</param>
-        /// <param name="targetMachine">Receives the target machine, if found.</param>
-        protected bool GetTargetMachine(MachineId targetMachineId, Event e, AbstractMachine sender,
-            Guid operationGroupId, out Machine targetMachine)
-        {
-            if (!this.MachineMap.TryGetValue(targetMachineId, out targetMachine))
-            {
-                var senderState = (sender as Machine)?.CurrentStateName ?? string.Empty;
-                this.Logger.OnSend(targetMachineId, sender?.Id, senderState,
-                    e.GetType().FullName, operationGroupId, isTargetHalted: true);
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Checks if the constructor of the specified machine type exists in the cache.
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Boolean</returns>
-        protected virtual bool IsMachineCached(Type type)
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Checks that a machine can start its event handler. Returns false if the event
-        /// handler should not be started.
-        /// </summary>
-        /// <param name="machine">Machine</param>
-        /// <returns>Boolean</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected internal virtual bool CheckStartEventHandler(Machine machine)
-        {
-            return true;
-        }
 
         #region timers
 
@@ -686,6 +632,7 @@ namespace Microsoft.PSharp
         /// </summary>
         public virtual void Dispose()
         {
+            this.MachineIdCounter = 0;
             this.NetworkProvider.Dispose();
         }
 

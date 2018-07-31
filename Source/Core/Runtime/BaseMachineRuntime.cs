@@ -13,6 +13,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.PSharp
@@ -288,5 +289,49 @@ namespace Microsoft.PSharp
         }
 
         #endregion
+
+        /// <summary>
+        /// Gets the target machine for an event; if not found, logs a halted-machine entry.
+        /// </summary>
+        /// <param name="targetMachineId">The id of target machine.</param>
+        /// <param name="e">The event that will be sent.</param>
+        /// <param name="sender">The machine that is sending the event.</param>
+        /// <param name="operationGroupId">The operation group id.</param>
+        /// <param name="targetMachine">Receives the target machine, if found.</param>
+        protected bool GetTargetMachine(MachineId targetMachineId, Event e, AbstractMachine sender,
+            Guid operationGroupId, out Machine targetMachine)
+        {
+            if (!this.MachineMap.TryGetValue(targetMachineId, out targetMachine))
+            {
+                var senderState = (sender as Machine)?.CurrentStateName ?? string.Empty;
+                this.Logger.OnSend(targetMachineId, sender?.Id, senderState,
+                    e.GetType().FullName, operationGroupId, isTargetHalted: true);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks that a machine can start its event handler. Returns false if the event
+        /// handler should not be started.
+        /// </summary>
+        /// <param name="machine">Machine</param>
+        /// <returns>Boolean</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected internal virtual bool CheckStartEventHandler(Machine machine)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if the constructor of the specified machine type exists in the cache.
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Boolean</returns>
+        protected virtual bool IsMachineCached(Type type)
+        {
+            return false;
+        }
     }
 }
