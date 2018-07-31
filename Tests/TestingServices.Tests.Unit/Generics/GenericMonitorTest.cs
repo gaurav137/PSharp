@@ -62,7 +62,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestGenericMonitor()
         {
-            var test = new Action<IStateMachineRuntime>((r) => {
+            var test = new Action<IPSharpRuntime>((r) => {
                 r.RegisterMonitor(typeof(M<int>));
                 r.CreateMachine(typeof(Program<int>));
             });

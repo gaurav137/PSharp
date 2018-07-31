@@ -26,11 +26,6 @@ namespace Microsoft.PSharp
     public abstract class AbstractMachine
     {
         /// <summary>
-        /// The runtime that executes this machine.
-        /// </summary>
-        internal BaseMachineRuntime Runtime { get; private set; }
-
-        /// <summary>
         /// The unique machine id.
         /// </summary>
         protected internal MachineId Id { get; private set; }
@@ -44,12 +39,10 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Initializes this machine.
         /// </summary>
-        /// <param name="runtime">BaseMachineRuntime</param>
         /// <param name="mid">MachineId</param>
         /// <param name="info">MachineInfo</param>
-        internal void Initialize(BaseMachineRuntime runtime, MachineId mid, MachineInfo info)
+        internal void Initialize(MachineId mid, MachineInfo info)
         {
-            this.Runtime = runtime;
             this.Id = mid;
             this.Info = info;
         }

@@ -66,7 +66,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestPushStateEvent()
         {
-            var test = new Action<IStateMachineRuntime>((r) => {
+            var test = new Action<IPSharpRuntime>((r) => {
                 r.CreateMachine(typeof(B));
             });
 

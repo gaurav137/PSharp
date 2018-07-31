@@ -19,9 +19,9 @@ using System;
 namespace Microsoft.PSharp
 {
     /// <summary>
-    /// The base interface of the P# runtime. It provides APIs for writing and checking
-    /// program specifications, generating controlled nondeterministic choices, as well
-    /// as various other runtime utilities.
+    /// The base interface of the P# runtime. It provides APIs for creating and executing
+    /// state-machines, sending events, writing and checking specifications, generating
+    /// controlled nondeterministic choices, as well as various runtime utilities.
     /// </summary>
     public interface IPSharpRuntime : IDisposable
     {
@@ -39,6 +39,57 @@ namespace Microsoft.PSharp
         /// Event that is fired when the P# program throws an exception.
         /// </summary>
         event OnFailureHandler OnFailure;
+
+        /// <summary>
+        /// Creates a fresh machine id that has not yet been bound to any machine.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="friendlyName">Friendly machine name used for logging</param>
+        /// <returns>MachineId</returns>
+
+        MachineId CreateMachineId(Type type, string friendlyName = null);
+
+        /// <summary>
+        /// Creates a new machine of the specified <see cref="Type"/> and with
+        /// the specified optional <see cref="Event"/>. This event can only be
+        /// used to access its payload, and cannot be handled.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="e">Event</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        /// <returns>MachineId</returns>
+        MachineId CreateMachine(Type type, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Creates a new machine of the specified <see cref="Type"/> and name, and
+        /// with the specified optional <see cref="Event"/>. This event can only be
+        /// used to access its payload, and cannot be handled.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="friendlyName">Friendly machine name used for logging</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        /// <param name="e">Event</param>
+        /// <returns>MachineId</returns>
+        MachineId CreateMachine(Type type, string friendlyName, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Creates a new machine of the specified <see cref="Type"/>, using the specified
+        /// machine id, and passes the specified optional <see cref="Event"/>. This
+        /// event can only be used to access its payload, and cannot be handled.
+        /// </summary>
+        /// <param name="mid">Unbound machine id</param>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="e">Event</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        void CreateMachine(MachineId mid, Type type, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Sends an asynchronous <see cref="Event"/> to a machine.
+        /// </summary>
+        /// <param name="target">Target machine id</param>
+        /// <param name="e">Event</param>
+        /// <param name="options">Optional parameters of a send operation.</param>
+        void SendEvent(MachineId target, Event e, SendOptions options = null);
 
         /// <summary>
         /// Registers a new specification monitor of the specified <see cref="Type"/>.
@@ -100,6 +151,15 @@ namespace Microsoft.PSharp
         /// <param name="s">Message</param>
         /// <param name="args">Message arguments</param>
         void Assert(bool predicate, string s, params object[] args);
+
+        /// <summary>
+        /// Returns the operation group id of the specified machine id. Returns <see cref="Guid.Empty"/>
+        /// if the id is not set, or if the <see cref="MachineId"/> is not associated with this runtime.
+        /// During testing, the runtime asserts that the specified machine is currently executing.
+        /// </summary>
+        /// <param name="currentMachine">MachineId of the currently executing machine.</param>
+        /// <returns>Guid</returns>
+        Guid GetCurrentOperationGroupId(MachineId currentMachine);
 
         /// <summary>
         /// Installs the specified <see cref="ILogger"/>.

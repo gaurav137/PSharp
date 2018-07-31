@@ -19,53 +19,11 @@ namespace Microsoft.PSharp
 {
     /// <summary>
     /// The interface of the P# runtime. It provides APIs for creating and executing
-    /// state-machines, sending events, as well as various other runtime utilities.
+    /// state-machines, sending events, writing and checking specifications, generating
+    /// controlled nondeterministic choices, as well as various runtime utilities.
     /// </summary>
     public interface IStateMachineRuntime : IPSharpRuntime
     {
-        /// <summary>
-        /// Creates a fresh machine id that has not yet been bound to any machine.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <returns>MachineId</returns>
-
-        MachineId CreateMachineId(Type type, string friendlyName = null);
-
-        /// <summary>
-        /// Creates a new machine of the specified <see cref="Type"/> and with
-        /// the specified optional <see cref="Event"/>. This event can only be
-        /// used to access its payload, and cannot be handled.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="e">Event</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        /// <returns>MachineId</returns>
-        MachineId CreateMachine(Type type, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Creates a new machine of the specified <see cref="Type"/>, using the specified
-        /// machine id, and passes the specified optional <see cref="Event"/>. This
-        /// event can only be used to access its payload, and cannot be handled.
-        /// </summary>
-        /// <param name="mid">Unbound machine id</param>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="e">Event</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        void CreateMachine(MachineId mid, Type type, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Creates a new machine of the specified <see cref="Type"/> and name, and
-        /// with the specified optional <see cref="Event"/>. This event can only be
-        /// used to access its payload, and cannot be handled.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <param name="operationGroupId">Optional operation group id</param>
-        /// <param name="e">Event</param>
-        /// <returns>MachineId</returns>
-        MachineId CreateMachine(Type type, string friendlyName, Event e = null, Guid? operationGroupId = null);
-
         /// <summary>
         /// Creates a new machine of the specified <see cref="Type"/> and with the
         /// specified optional <see cref="Event"/>. This event can only be used to
@@ -128,14 +86,6 @@ namespace Microsoft.PSharp
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
         MachineId RemoteCreateMachine(Type type, string friendlyName, string endpoint, Event e = null, Guid? operationGroupId = null);
-
-        /// <summary>
-        /// Sends an asynchronous <see cref="Event"/> to a machine.
-        /// </summary>
-        /// <param name="target">Target machine id</param>
-        /// <param name="e">Event</param>
-        /// <param name="options">Optional parameters of a send operation.</param>
-        void SendEvent(MachineId target, Event e, SendOptions options = null);
 
         /// <summary>
         /// Sends an <see cref="Event"/> to a machine. Returns immediately

@@ -63,7 +63,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Integration
             var configuration = base.GetConfiguration();
             configuration.SchedulingStrategy = SchedulingStrategy.DFS;
 
-            var test = new Action<IStateMachineRuntime>((r) => {
+            var test = new Action<IPSharpRuntime>((r) => {
                 r.RegisterMonitor(typeof(M));
                 r.CreateMachine(typeof(Real1));
             });

@@ -93,7 +93,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             configuration.SchedulingStrategy = SchedulingStrategy.DFS;
             configuration.MaxSchedulingSteps = 300;
 
-            var test = new Action<IStateMachineRuntime>((r) => {
+            var test = new Action<IPSharpRuntime>((r) => {
                 r.RegisterMonitor(typeof(WatchDog));
                 r.CreateMachine(typeof(EventHandler));
             });

@@ -57,7 +57,10 @@ namespace Microsoft.PSharp
 
         #endregion
 
-        #region fields
+        /// <summary>
+        /// The runtime that executes this machine.
+        /// </summary>
+        internal BaseMachineRuntime Runtime { get; private set; }
 
         /// <summary>
         /// A stack of machine states. The state on the top of
@@ -129,10 +132,6 @@ namespace Microsoft.PSharp
         /// (suppressing the exception).
         /// </summary>
         private bool OnExceptionRequestedGracefulHalt;
-
-        #endregion
-
-        #region properties
 
         /// <summary>
         /// The logger installed to the P# runtime.
@@ -212,10 +211,6 @@ namespace Microsoft.PSharp
             }
         }
 
-        #endregion
-
-        #region constructors
-
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -243,9 +238,7 @@ namespace Microsoft.PSharp
             this.OnExceptionRequestedGracefulHalt = false;
         }
 
-        #endregion
-
-        #region P# user API
+        #region user interface
 
         /// <summary>
         /// Creates a new machine of the specified type and with the specified
@@ -1445,6 +1438,18 @@ namespace Microsoft.PSharp
         {
             this.ReceivedEvent = e;
             return this.ExecuteCurrentStateOnEntry();
+        }
+
+        /// <summary>
+        /// Initializes this machine.
+        /// </summary>
+        /// <param name="runtime">BaseMachineRuntime</param>
+        /// <param name="mid">MachineId</param>
+        /// <param name="info">MachineInfo</param>
+        internal void Initialize(BaseMachineRuntime runtime, MachineId mid, MachineInfo info)
+        {
+            this.Runtime = runtime;
+            base.Initialize(mid, info);
         }
 
         /// <summary>

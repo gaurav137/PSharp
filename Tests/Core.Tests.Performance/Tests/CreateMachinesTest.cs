@@ -12,10 +12,9 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using BenchmarkDotNet.Attributes;
 using System.Threading;
 using System.Threading.Tasks;
-
-using BenchmarkDotNet.Attributes;
 
 namespace Microsoft.PSharp.Core.Tests.Performance
 {
@@ -60,7 +59,7 @@ namespace Microsoft.PSharp.Core.Tests.Performance
         [Benchmark]
         public void CreateMachines()
         {
-            var configuration = Configuration.Create();
+            var configuration = PSharp.Configuration.Create();
             var runtime = new ProductionRuntime(configuration);
 
             var tcs = new TaskCompletionSource<bool>();

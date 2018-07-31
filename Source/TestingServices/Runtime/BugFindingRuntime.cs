@@ -32,7 +32,7 @@ namespace Microsoft.PSharp.TestingServices
     /// <summary>
     /// Runtime for executing state-machines in bug-finding mode.
     /// </summary>
-    internal class BugFindingRuntime : BaseRuntime, IStateMachineRuntime
+    internal class BugFindingRuntime : BaseMachineRuntime, IStateMachineRuntime
     {
         /// <summary>
         /// The bug-finding scheduler.
@@ -167,7 +167,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="operationGroupId">Optional operation group id</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public MachineId CreateMachine(Type type, Event e = null, Guid? operationGroupId = null)
+        public override MachineId CreateMachine(Type type, Event e = null, Guid? operationGroupId = null)
         {
             return this.CreateMachine(null, type, null, e, operationGroupId);
         }
@@ -181,7 +181,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="type">Type of the machine</param>
         /// <param name="e">Event</param>
         /// <param name="operationGroupId">Optional operation group id</param>
-        public void CreateMachine(MachineId mid, Type type, Event e = null, Guid? operationGroupId = null)
+        public override void CreateMachine(MachineId mid, Type type, Event e = null, Guid? operationGroupId = null)
         {
             this.Assert(mid != null, "Cannot pass a null MachineId.");
             this.CreateMachine(mid, type, null, e, operationGroupId);
@@ -197,7 +197,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="operationGroupId">Optional operation group id</param>
         /// <param name="e">Event</param>
         /// <returns>MachineId</returns>
-        public MachineId CreateMachine(Type type, string friendlyName, Event e = null, Guid? operationGroupId = null)
+        public override MachineId CreateMachine(Type type, string friendlyName, Event e = null, Guid? operationGroupId = null)
         {
             return this.CreateMachine(null, type, friendlyName, e, operationGroupId);
         }
@@ -346,7 +346,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="target">Target machine id</param>
         /// <param name="e">Event</param>
         /// <param name="options">Optional parameters of a send operation.</param>
-        public void SendEvent(MachineId target, Event e, SendOptions options = null)
+        public override void SendEvent(MachineId target, Event e, SendOptions options = null)
         {
             // If the target machine is null then report an error and exit.
             this.Assert(target != null, "Cannot send to a null machine.");
@@ -448,7 +448,7 @@ namespace Microsoft.PSharp.TestingServices
 
         #endregion
 
-        #region internal methods
+        #region machine creation and execution
 
         /// <summary>
         /// Runs the specified test method inside a test harness machine.
@@ -461,7 +461,7 @@ namespace Microsoft.PSharp.TestingServices
             this.Assert(testMethod != null || testAction != null, "The test harness machine " +
                 "cannot execute a null test method or action.");
 
-            MachineId mid = new MachineId(typeof(TestHarnessMachine), null, this);
+            MachineId mid = new MachineId(this, typeof(TestHarnessMachine), null);
             TestHarnessMachine harness = new TestHarnessMachine(testMethod, testAction);
 
             harness.Initialize(this, mid, new SchedulableInfo(mid));
@@ -507,7 +507,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="e">Event passed during machine construction</param>
         /// <param name="creator">Creator machine</param>
         /// <returns>MachineId</returns>
-        protected internal MachineId CreateMachine(MachineId mid, Type type, string friendlyName, Event e, Machine creator, Guid? operationGroupId)
+        protected internal override MachineId CreateMachine(MachineId mid, Type type, string friendlyName, Event e, Machine creator, Guid? operationGroupId)
         {
             this.AssertCorrectCallerMachine(creator, "CreateMachine");
             if (creator != null)
@@ -540,8 +540,8 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="e">Event passed during machine construction</param>
         /// <param name="creator">Creator machine</param>
         /// <returns>MachineId</returns>
-        protected internal async Task<MachineId> CreateMachineAndExecute(MachineId mid, Type type, string friendlyName, Event e,
-            Machine creator, Guid? operationGroupId)
+        protected internal override async Task<MachineId> CreateMachineAndExecute(MachineId mid, Type type, string friendlyName,
+            Event e, Machine creator, Guid? operationGroupId)
         {
             this.AssertCorrectCallerMachine(creator, "CreateMachineAndExecute");
             this.Assert(creator != null, "Only a machine can execute CreateMachineAndExecute. " +
@@ -577,7 +577,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="e">Event passed during machine construction</param>
         /// <param name="creator">Creator machine</param>
         /// <returns>MachineId</returns>
-        protected internal MachineId CreateRemoteMachine(Type type, string friendlyName, string endpoint,
+        protected internal override MachineId CreateRemoteMachine(Type type, string friendlyName, string endpoint,
             Event e, Machine creator, Guid? operationGroupId)
         {
             return this.CreateMachine(null, type, friendlyName, e, creator, operationGroupId);
@@ -597,7 +597,7 @@ namespace Microsoft.PSharp.TestingServices
 
             if (mid == null)
             {
-                mid = new MachineId(type, friendlyName, this);
+                mid = new MachineId(this, type, friendlyName);
             }
             else
             {
@@ -607,7 +607,7 @@ namespace Microsoft.PSharp.TestingServices
                 mid.Bind(this);
             }
 
-            var isMachineTypeCached = this.IsMachineCached(type);
+            var isMachineTypeCached = this.IsMachineConstructorCached(type);
             Machine machine = this.CreateMachine(type);
 
             machine.Initialize(this, mid, new SchedulableInfo(mid));
@@ -636,33 +636,13 @@ namespace Microsoft.PSharp.TestingServices
         }
 
         /// <summary>
-        /// Creates a new P# machine of the specified type.
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Machine</returns>
-        protected Machine CreateMachine(Type type)
-        {
-            return MachineFactory.Create(type);
-        }
-
-        /// <summary>
-        /// Checks if the constructor of the specified machine type exists in the cache.
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Boolean</returns>
-        protected override bool IsMachineCached(Type type)
-        {
-            return MachineFactory.IsCached(type);
-        }
-
-        /// <summary>
         /// Sends an asynchronous <see cref="Event"/> to a machine.
         /// </summary>
         /// <param name="mid">MachineId</param>
         /// <param name="e">Event</param>
         /// <param name="sender">Sender machine</param>
         /// <param name="options">Optional parameters of a send operation.</param>
-        protected internal void SendEvent(MachineId mid, Event e, AbstractMachine sender, SendOptions options)
+        protected internal override void SendEvent(MachineId mid, Event e, AbstractMachine sender, SendOptions options)
         {
             this.AssertCorrectCallerMachine(sender as Machine, "SendEvent");
             this.Assert(this.CreatedMachineIds.Contains(mid), "Cannot Send event {0} to a MachineId '{1}' that was never " +
@@ -696,7 +676,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="sender">Sender machine</param>
         /// <param name="options">Optional parameters of a send operation.</param>
         /// <returns>True if event was handled, false if the event was only enqueued</returns>
-        protected internal async Task<bool> SendEventAndExecute(MachineId mid, Event e, AbstractMachine sender, SendOptions options)
+        protected internal override async Task<bool> SendEventAndExecute(MachineId mid, Event e, AbstractMachine sender, SendOptions options)
         {
             this.AssertCorrectCallerMachine(sender as Machine, "SendEventAndExecute");
             this.Assert(this.CreatedMachineIds.Contains(mid), "Cannot Send event {0} to a MachineId ({0},{1}) that was never " +
@@ -744,7 +724,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="e">Event</param>
         /// <param name="sender">Sender machine</param>
         /// <param name="options">Optional parameters of a send operation.</param>
-        protected internal void SendEventRemotely(MachineId mid, Event e, AbstractMachine sender, SendOptions options)
+        protected internal override void SendEventRemotely(MachineId mid, Event e, AbstractMachine sender, SendOptions options)
         {
             this.SendEvent(mid, e, sender, options);
         }
@@ -811,8 +791,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <param name="isFresh">If true, then this is a new machine.</param>
         /// <param name="syncCaller">Caller machine that is blocked for quiescence.</param>
         /// <param name="enablingEvent">If non-null, the event info of the sent event that caused the event handler to be restarted.</param>
-        protected void RunMachineEventHandler(Machine machine, Event initialEvent, bool isFresh,
-            MachineId syncCaller, EventInfo enablingEvent)
+        protected override void RunMachineEventHandler(Machine machine, Event initialEvent, bool isFresh, MachineId syncCaller, EventInfo enablingEvent)
         {
             Task task = new Task(async () =>
             {
@@ -827,7 +806,7 @@ namespace Microsoft.PSharp.TestingServices
 
                     await machine.RunEventHandler();
 
-                    if(syncCaller != null)
+                    if (syncCaller != null)
                     {
                         this.SendEvent(syncCaller, new QuiescentEvent(machine.Id));
                     }
@@ -920,7 +899,7 @@ namespace Microsoft.PSharp.TestingServices
             this.Assert(type.IsSubclassOf(typeof(Monitor)), $"Type '{type.Name}' " +
                 "is not a subclass of Monitor.\n");
 
-            MachineId mid = new MachineId(type, null, this);
+            MachineId mid = new MachineId(this, type, null);
 
             SchedulableInfo info = new SchedulableInfo(mid);
             Scheduler.NotifyMonitorRegistered(info);

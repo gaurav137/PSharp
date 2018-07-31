@@ -85,13 +85,63 @@ namespace Microsoft.PSharp
         {
             this.MachineIdCounter = 0;
             this.MachineMap = new ConcurrentDictionary<MachineId, Machine>();
-            // TODO: fix
-            this.NetworkProvider = new LocalNetworkProvider(this as BaseMachineRuntime);
+            this.NetworkProvider = new LocalNetworkProvider(this);
             this.SetLogger(new ConsoleLogger());
             this.IsRunning = true;
         }
 
         #region runtime interface
+
+        /// <summary>
+        /// Creates a fresh machine id that has not yet been bound to any machine.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="friendlyName">Friendly machine name used for logging</param>
+        /// <returns>MachineId</returns>
+
+        public MachineId CreateMachineId(Type type, string friendlyName = null) => new MachineId(this, type, friendlyName);
+
+        /// <summary>
+        /// Creates a new machine of the specified <see cref="Type"/> and with
+        /// the specified optional <see cref="Event"/>. This event can only be
+        /// used to access its payload, and cannot be handled.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="e">Event</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        /// <returns>MachineId</returns>
+        public abstract MachineId CreateMachine(Type type, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Creates a new machine of the specified <see cref="Type"/> and name, and
+        /// with the specified optional <see cref="Event"/>. This event can only be
+        /// used to access its payload, and cannot be handled.
+        /// </summary>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="friendlyName">Friendly machine name used for logging</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        /// <param name="e">Event</param>
+        /// <returns>MachineId</returns>
+        public abstract MachineId CreateMachine(Type type, string friendlyName, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Creates a new machine of the specified <see cref="Type"/>, using the specified
+        /// machine id, and passes the specified optional <see cref="Event"/>. This
+        /// event can only be used to access its payload, and cannot be handled.
+        /// </summary>
+        /// <param name="mid">Unbound machine id</param>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="e">Event</param>
+        /// <param name="operationGroupId">Optional operation group id</param>
+        public abstract void CreateMachine(MachineId mid, Type type, Event e = null, Guid? operationGroupId = null);
+
+        /// <summary>
+        /// Sends an asynchronous <see cref="Event"/> to a machine.
+        /// </summary>
+        /// <param name="target">Target machine id</param>
+        /// <param name="e">Event</param>
+        /// <param name="options">Optional parameters of a send operation.</param>
+        public abstract void SendEvent(MachineId target, Event e, SendOptions options = null);
 
         /// <summary>
         /// Registers a new specification monitor of the specified <see cref="Type"/>.
@@ -118,10 +168,7 @@ namespace Microsoft.PSharp
         /// during analysis or testing.
         /// </summary>
         /// <returns>Boolean</returns>
-        public bool Random()
-        {
-            return this.GetNondeterministicBooleanChoice(null, 2);
-        }
+        public bool Random() => this.GetNondeterministicBooleanChoice(null, 2);
 
         /// <summary>
         /// Returns a nondeterministic boolean choice, that can be controlled
@@ -130,10 +177,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="maxValue">Max value</param>
         /// <returns>Boolean</returns>
-        public bool Random(int maxValue)
-        {
-            return this.GetNondeterministicBooleanChoice(null, maxValue);
-        }
+        public bool Random(int maxValue) => this.GetNondeterministicBooleanChoice(null, maxValue);
 
         /// <summary>
         /// Returns a nondeterministic integer choice, that can be
@@ -142,10 +186,7 @@ namespace Microsoft.PSharp
         /// </summary>
         /// <param name="maxValue">Max value</param>
         /// <returns>Integer</returns>
-        public int RandomInteger(int maxValue)
-        {
-            return this.GetNondeterministicIntegerChoice(null, maxValue);
-        }
+        public int RandomInteger(int maxValue) => this.GetNondeterministicIntegerChoice(null, maxValue);
 
         /// <summary>
         /// Returns the operation group id of the specified machine. During testing,
@@ -161,6 +202,78 @@ namespace Microsoft.PSharp
         /// be used only for testing purposes.
         /// </summary>
         public abstract void Stop();
+
+        #endregion
+
+        #region machine creation and execution
+
+        /// <summary>
+        /// Creates a new P# machine of the specified type.
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Machine</returns>
+        protected Machine CreateMachine(Type type) => MachineFactory.Create(type);
+
+        /// <summary>
+        /// Creates a new <see cref="Machine"/> of the specified <see cref="Type"/>.
+        /// </summary>
+        /// <param name="mid">Unbound machine id</param>
+        /// <param name="type">Type of the machine</param>
+        /// <param name="friendlyName">Friendly machine name used for logging</param>
+        /// <param name="e">Event passed during machine construction</param>
+        /// <param name="operationGroupId">Operation group id</param>
+        /// <param name="creator">Creator machine</param>
+        /// <returns>MachineId</returns>
+        protected abstract internal MachineId CreateMachine(MachineId mid, Type type, string friendlyName, Event e, Machine creator, Guid? operationGroupId);
+
+        /// <summary>
+        /// Runs a new asynchronous machine event handler.
+        /// This is a fire and forget invocation.
+        /// </summary>
+        /// <param name="machine">Machine that executes this event handler.</param>
+        /// <param name="initialEvent">Event for initializing the machine.</param>
+        /// <param name="isFresh">If true, then this is a new machine.</param>
+        /// <param name="syncCaller">Caller machine that is blocked for quiescence.</param>
+        /// <param name="enablingEvent">If non-null, the event info of the sent event that caused the event handler to be restarted.</param>
+        protected abstract void RunMachineEventHandler(Machine machine, Event initialEvent, bool isFresh, MachineId syncCaller, EventInfo enablingEvent);
+
+        /// <summary>
+        /// Checks that a machine can start its event handler. Returns false if the event
+        /// handler should not be started.
+        /// </summary>
+        /// <param name="machine">Machine</param>
+        /// <returns>Boolean</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected internal virtual bool CheckStartEventHandler(Machine machine) => true;
+
+        /// <summary>
+        /// Gets the target machine for an event; if not found, logs a halted-machine entry.
+        /// </summary>
+        /// <param name="targetMachineId">The id of target machine.</param>
+        /// <param name="e">The event that will be sent.</param>
+        /// <param name="sender">The machine that is sending the event.</param>
+        /// <param name="operationGroupId">The operation group id.</param>
+        /// <param name="targetMachine">Receives the target machine, if found.</param>
+        protected bool GetTargetMachine(MachineId targetMachineId, Event e, AbstractMachine sender,
+            Guid operationGroupId, out Machine targetMachine)
+        {
+            if (!this.MachineMap.TryGetValue(targetMachineId, out targetMachine))
+            {
+                var senderState = (sender as Machine)?.CurrentStateName ?? string.Empty;
+                this.Logger.OnSend(targetMachineId, sender?.Id, senderState,
+                    e.GetType().FullName, operationGroupId, isTargetHalted: true);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if the constructor of the specified machine type exists in the cache.
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Boolean</returns>
+        protected bool IsMachineConstructorCached(Type type) => MachineFactory.IsCached(type);
 
         #endregion
 
@@ -585,8 +698,7 @@ namespace Microsoft.PSharp
         public void RemoveNetworkProvider()
         {
             this.NetworkProvider.Dispose();
-            // TODO: fix
-            this.NetworkProvider = new LocalNetworkProvider(this as BaseMachineRuntime);
+            this.NetworkProvider = new LocalNetworkProvider(this);
         }
 
         #endregion

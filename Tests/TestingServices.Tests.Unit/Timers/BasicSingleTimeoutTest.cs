@@ -71,7 +71,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
 			var config = Configuration.Create().WithNumberOfIterations(1000);
 			config.MaxSchedulingSteps = 200;
 			
-			var test = new Action<IStateMachineRuntime>((r) => {
+			var test = new Action<IPSharpRuntime>((r) => {
 				r.CreateMachine(typeof(T1));
 			});
 			base.AssertSucceeded(test);

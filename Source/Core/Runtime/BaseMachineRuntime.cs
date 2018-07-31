@@ -13,7 +13,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.PSharp
@@ -31,40 +30,6 @@ namespace Microsoft.PSharp
             : base(configuration)
         { }
 
-        #region runtime interface
-
-        /// <summary>
-        /// Creates a fresh machine id that has not yet been bound to any machine.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <returns>MachineId</returns>
-
-        public MachineId CreateMachineId(Type type, string friendlyName = null) => new MachineId(this, type, friendlyName);
-
-        #endregion
-
-        #region state-machine execution
-
-        /// <summary>
-        /// Creates a new <see cref="Machine"/> of the specified <see cref="Type"/>.
-        /// </summary>
-        /// <param name="mid">Unbound machine id</param>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <param name="e">Event passed during machine construction</param>
-        /// <param name="operationGroupId">Operation group id</param>
-        /// <param name="creator">Creator machine</param>
-        /// <returns>MachineId</returns>
-        protected internal MachineId CreateMachine(MachineId mid, Type type, string friendlyName, Event e, Machine creator, Guid? operationGroupId)
-        {
-            Machine machine = this.CreateMachine(mid, type, friendlyName);
-            base.Logger.OnCreateMachine(machine.Id, creator?.Id);
-            this.SetOperationGroupIdForMachine(machine, creator, operationGroupId);
-            this.RunMachineEventHandler(machine, e, true);
-            return machine.Id;
-        }
-
         /// <summary>
         /// Creates a new <see cref="Machine"/> of the specified <see cref="Type"/>. The
         /// method returns only when the created machine reaches quiescence
@@ -76,15 +41,8 @@ namespace Microsoft.PSharp
         /// <param name="operationGroupId">Operation group id</param>
         /// <param name="creator">Creator machine</param>
         /// <returns>MachineId</returns>
-        protected internal async Task<MachineId> CreateMachineAndExecute(MachineId mid, Type type, string friendlyName, Event e,
-            Machine creator, Guid? operationGroupId)
-        {
-            Machine machine = this.CreateMachine(mid, type, friendlyName);
-            base.Logger.OnCreateMachine(machine.Id, creator?.Id);
-            this.SetOperationGroupIdForMachine(machine, creator, operationGroupId);
-            await this.RunMachineEventHandlerAsync(machine, e, true);
-            return machine.Id;
-        }
+        protected internal abstract Task<MachineId> CreateMachineAndExecute(MachineId mid, Type type, string friendlyName,
+            Event e, Machine creator, Guid? operationGroupId);
 
         /// <summary>
         /// Creates a new remote <see cref="Machine"/> of the specified <see cref="System.Type"/>.
@@ -96,59 +54,8 @@ namespace Microsoft.PSharp
         /// <param name="operationGroupId">Operation group id</param>
         /// <param name="creator">Creator machine</param>
         /// <returns>MachineId</returns>
-        protected internal MachineId CreateRemoteMachine(Type type, string friendlyName, string endpoint,
-            Event e, Machine creator, Guid? operationGroupId)
-        {
-            base.Assert(type.IsSubclassOf(typeof(Machine)), $"Type '{type.Name}' is not a machine.");
-            return base.NetworkProvider.RemoteCreateMachine(type, friendlyName, endpoint, e);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Machine"/> of the specified <see cref="Type"/>.
-        /// </summary>
-        /// <param name="mid">Unbound machine id</param>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <returns>Machine</returns>
-        private Machine CreateMachine(MachineId mid, Type type, string friendlyName)
-        {
-            this.Assert(type.IsSubclassOf(typeof(Machine)), "Type '{0}' is not a machine.", type.Name);
-
-            if (mid == null)
-            {
-                mid = new MachineId(this, type, friendlyName);
-            }
-            else
-            {
-                this.Assert(mid.Runtime == null || mid.Runtime == this, "Unbound machine id '{0}' was created by another runtime.", mid.Name);
-                this.Assert(mid.Type == type.FullName, "Cannot bind machine id '{0}' of type '{1}' to a machine of type '{2}'.",
-                    mid.Name, mid.Type, type.FullName);
-                mid.Bind(this);
-            }
-
-            Machine machine = this.CreateMachine(type);
-
-            machine.Initialize(this, mid, new MachineInfo(mid));
-            machine.InitializeStateInformation();
-
-            bool result = this.MachineMap.TryAdd(mid, machine);
-            this.Assert(result, "MachineId {0} = This typically occurs " +
-                "either if the machine id was created by another runtime instance, or if a machine id from a previous " +
-                "runtime generation was deserialized, but the current runtime has not increased its generation value.",
-                mid.Name);
-
-            return machine;
-        }
-
-        /// <summary>
-        /// Creates a new P# machine of the specified type.
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Machine</returns>
-        protected Machine CreateMachine(Type type)
-        {
-            return MachineFactory.Create(type);
-        }
+        protected internal abstract MachineId CreateRemoteMachine(Type type, string friendlyName, string endpoint,
+            Event e, Machine creator, Guid? operationGroupId);
 
         /// <summary>
         /// Sends an asynchronous <see cref="Event"/> to a machine.
@@ -157,21 +64,7 @@ namespace Microsoft.PSharp
         /// <param name="e">Event</param>
         /// <param name="sender">Sender machine</param>
         /// <param name="options">Optional parameters of a send operation.</param>
-        protected internal void SendEvent(MachineId mid, Event e, AbstractMachine sender, SendOptions options)
-        {
-            var operationGroupId = base.GetNewOperationGroupId(sender, options?.OperationGroupId);
-            if (!base.GetTargetMachine(mid, e, sender, operationGroupId, out Machine machine))
-            {
-                return;
-            }
-
-            bool runNewHandler = false;
-            this.EnqueueEvent(machine, e, sender, operationGroupId, ref runNewHandler);
-            if (runNewHandler)
-            {
-                this.RunMachineEventHandler(machine, null, false);
-            }
-        }
+        protected internal abstract void SendEvent(MachineId mid, Event e, AbstractMachine sender, SendOptions options);
 
         /// <summary>
         /// Sends an asynchronous <see cref="Event"/> to a machine. Returns immediately
@@ -183,23 +76,7 @@ namespace Microsoft.PSharp
         /// <param name="sender">Sender machine</param>
         /// <param name="options">Optional parameters of a send operation.</param>
         /// <returns>True if event was handled, false if the event was only enqueued</returns>
-        protected internal async Task<bool> SendEventAndExecute(MachineId mid, Event e, AbstractMachine sender, SendOptions options)
-        {
-            var operationGroupId = base.GetNewOperationGroupId(sender, options?.OperationGroupId);
-            if (!base.GetTargetMachine(mid, e, sender, operationGroupId, out Machine machine))
-            {
-                return true;
-            }
-
-            bool runNewHandler = false;
-            this.EnqueueEvent(machine, e, sender, operationGroupId, ref runNewHandler);
-            if (runNewHandler)
-            {
-                await this.RunMachineEventHandlerAsync(machine, null, false);
-                return true;
-            }
-            return false;
-        }
+        protected internal abstract Task<bool> SendEventAndExecute(MachineId mid, Event e, AbstractMachine sender, SendOptions options);
 
         /// <summary>
         /// Sends an asynchronous <see cref="Event"/> to a remote machine.
@@ -208,130 +85,6 @@ namespace Microsoft.PSharp
         /// <param name="e">Event</param>
         /// <param name="sender">Sender machine</param>
         /// <param name="options">Optional parameters of a send operation.</param>
-        protected internal void SendEventRemotely(MachineId mid, Event e, AbstractMachine sender, SendOptions options)
-        {
-            base.NetworkProvider.RemoteSend(mid, e);
-        }
-
-        /// <summary>
-        /// Enqueues an asynchronous <see cref="Event"/> to a machine.
-        /// </summary>
-        /// <param name="machine">Machine</param>
-        /// <param name="e">Event</param>
-        /// <param name="sender">Sender machine</param>
-        /// <param name="operationGroupId">Operation group id</param>
-        /// <param name="runNewHandler">Run a new handler</param>
-        private void EnqueueEvent(Machine machine, Event e, AbstractMachine sender, Guid operationGroupId, ref bool runNewHandler)
-        {
-            EventInfo eventInfo = new EventInfo(e, null);
-            eventInfo.SetOperationGroupId(operationGroupId);
-
-            var senderState = (sender as Machine)?.CurrentStateName ?? string.Empty;
-            base.Logger.OnSend(machine.Id, sender?.Id, senderState,
-                e.GetType().FullName, operationGroupId, isTargetHalted: false);
-
-            machine.Enqueue(eventInfo, ref runNewHandler);
-        }
-
-        /// <summary>
-        /// Runs a new asynchronous machine event handler.
-        /// This is a fire and forget invocation.
-        /// </summary>
-        /// <param name="machine">Machine that executes this event handler.</param>
-        /// <param name="initialEvent">Event for initializing the machine.</param>
-        /// <param name="isFresh">If true, then this is a new machine.</param>
-        protected void RunMachineEventHandler(Machine machine, Event initialEvent, bool isFresh)
-        {
-            Task.Run(async () =>
-            {
-                try
-                {
-                    if (isFresh)
-                    {
-                        await machine.GotoStartState(initialEvent);
-                    }
-
-                    await machine.RunEventHandler();
-                }
-                catch (Exception ex)
-                {
-                    base.IsRunning = false;
-                    base.RaiseOnFailureEvent(ex);
-                    this.Dispose();
-                }
-            });
-        }
-
-        /// <summary>
-        /// Runs a new asynchronous machine event handler.
-        /// </summary>
-        /// <param name="machine">Machine that executes this event handler.</param>
-        /// <param name="initialEvent">Event for initializing the machine.</param>
-        /// <param name="isFresh">If true, then this is a new machine.</param>
-        protected async Task RunMachineEventHandlerAsync(Machine machine, Event initialEvent, bool isFresh)
-        {
-            try
-            {
-                if (isFresh)
-                {
-                    await machine.GotoStartState(initialEvent);
-                }
-
-                await machine.RunEventHandler();
-            }
-            catch (Exception ex)
-            {
-                base.IsRunning = false;
-                base.RaiseOnFailureEvent(ex);
-                this.Dispose();
-                return;
-            }
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Gets the target machine for an event; if not found, logs a halted-machine entry.
-        /// </summary>
-        /// <param name="targetMachineId">The id of target machine.</param>
-        /// <param name="e">The event that will be sent.</param>
-        /// <param name="sender">The machine that is sending the event.</param>
-        /// <param name="operationGroupId">The operation group id.</param>
-        /// <param name="targetMachine">Receives the target machine, if found.</param>
-        protected bool GetTargetMachine(MachineId targetMachineId, Event e, AbstractMachine sender,
-            Guid operationGroupId, out Machine targetMachine)
-        {
-            if (!this.MachineMap.TryGetValue(targetMachineId, out targetMachine))
-            {
-                var senderState = (sender as Machine)?.CurrentStateName ?? string.Empty;
-                this.Logger.OnSend(targetMachineId, sender?.Id, senderState,
-                    e.GetType().FullName, operationGroupId, isTargetHalted: true);
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Checks that a machine can start its event handler. Returns false if the event
-        /// handler should not be started.
-        /// </summary>
-        /// <param name="machine">Machine</param>
-        /// <returns>Boolean</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected internal virtual bool CheckStartEventHandler(Machine machine)
-        {
-            return true;
-        }
-
-        /// <summary>
-        /// Checks if the constructor of the specified machine type exists in the cache.
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Boolean</returns>
-        protected virtual bool IsMachineCached(Type type)
-        {
-            return false;
-        }
+        protected internal abstract void SendEventRemotely(MachineId mid, Event e, AbstractMachine sender, SendOptions options);
     }
 }

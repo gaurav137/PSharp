@@ -22,9 +22,9 @@ namespace Microsoft.PSharp.Net
     internal class LocalNetworkProvider : INetworkProvider
     {
         /// <summary>
-        /// Instance of the state-machine runtime.
+        /// Instance of the machine runtime.
         /// </summary>
-        private BaseMachineRuntime Runtime;
+        private BaseRuntime Runtime;
 
         /// <summary>
         /// The local endpoint.
@@ -34,8 +34,8 @@ namespace Microsoft.PSharp.Net
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">BaseMachineRuntime</param>
-        internal LocalNetworkProvider(BaseMachineRuntime runtime)
+        /// <param name="runtime">BaseRuntime</param>
+        internal LocalNetworkProvider(BaseRuntime runtime)
         {
             this.Runtime = runtime;
             this.LocalEndpoint = "";
@@ -65,7 +65,7 @@ namespace Microsoft.PSharp.Net
         /// <param name="e">Event</param>
         void INetworkProvider.RemoteSend(MachineId target, Event e)
         {
-            this.Runtime.SendEvent(target, e, null, null);
+            this.Runtime.SendEvent(target, e, null);
         }
 
         /// <summary>

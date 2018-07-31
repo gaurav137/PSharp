@@ -28,13 +28,13 @@ namespace Microsoft.PSharp.SharedObjects.Tests.Unit
     {
         #region successful tests
 
-        protected void AssertSucceeded(Action<IStateMachineRuntime> test)
+        protected void AssertSucceeded(Action<IPSharpRuntime> test)
         {
             var configuration = GetConfiguration();
             AssertSucceeded(configuration, test);
         }
 
-        protected void AssertSucceeded(Configuration configuration, Action<IStateMachineRuntime> test)
+        protected void AssertSucceeded(Configuration configuration, Action<IPSharpRuntime> test)
         {
             InMemoryLogger logger = new InMemoryLogger();
 
@@ -61,35 +61,35 @@ namespace Microsoft.PSharp.SharedObjects.Tests.Unit
 
         #region tests that fail an assertion
 
-        protected void AssertFailed(Action<IStateMachineRuntime> test, int numExpectedErrors)
+        protected void AssertFailed(Action<IPSharpRuntime> test, int numExpectedErrors)
         {
             var configuration = GetConfiguration();
             AssertFailed(configuration, test, numExpectedErrors);
         }
 
-        protected void AssertFailed(Action<IStateMachineRuntime> test, string expectedOutput)
+        protected void AssertFailed(Action<IPSharpRuntime> test, string expectedOutput)
         {
             var configuration = GetConfiguration();
             AssertFailed(configuration, test, 1, new HashSet<string> { expectedOutput });
         }
 
-        protected void AssertFailed(Action<IStateMachineRuntime> test, int numExpectedErrors, ISet<string> expectedOutputs)
+        protected void AssertFailed(Action<IPSharpRuntime> test, int numExpectedErrors, ISet<string> expectedOutputs)
         {
             var configuration = GetConfiguration();
             AssertFailed(configuration, test, numExpectedErrors, expectedOutputs);
         }
 
-        protected void AssertFailed(Configuration configuration, Action<IStateMachineRuntime> test, int numExpectedErrors)
+        protected void AssertFailed(Configuration configuration, Action<IPSharpRuntime> test, int numExpectedErrors)
         {
             AssertFailed(configuration, test, numExpectedErrors, new HashSet<string>());
         }
 
-        protected void AssertFailed(Configuration configuration, Action<IStateMachineRuntime> test, string expectedOutput)
+        protected void AssertFailed(Configuration configuration, Action<IPSharpRuntime> test, string expectedOutput)
         {
             AssertFailed(configuration, test, 1, new HashSet<string> { expectedOutput });
         }
 
-        protected void AssertFailed(Configuration configuration, Action<IStateMachineRuntime> test, int numExpectedErrors,
+        protected void AssertFailed(Configuration configuration, Action<IPSharpRuntime> test, int numExpectedErrors,
             ISet<string> expectedOutputs)
         {
             InMemoryLogger logger = new InMemoryLogger();
@@ -147,13 +147,13 @@ namespace Microsoft.PSharp.SharedObjects.Tests.Unit
 
         #region tests that throw an exception
 
-        protected void AssertFailedWithException(Action<IStateMachineRuntime> test, Type exceptionType)
+        protected void AssertFailedWithException(Action<IPSharpRuntime> test, Type exceptionType)
         {
             var configuration = GetConfiguration();
             AssertFailedWithException(configuration, test, exceptionType);
         }
 
-        protected void AssertFailedWithException(Configuration configuration, Action<IStateMachineRuntime> test, Type exceptionType)
+        protected void AssertFailedWithException(Configuration configuration, Action<IPSharpRuntime> test, Type exceptionType)
         {
             Assert.True(exceptionType.IsSubclassOf(typeof(Exception)), "Please configure the test correctly. " +
                 $"Type '{exceptionType}' is not an exception type.");

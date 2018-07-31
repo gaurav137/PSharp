@@ -74,7 +74,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Integration
         [Fact]
         public void TestPushImplicitPopWithRaise()
         {
-            var test = new Action<IStateMachineRuntime>((r) => {
+            var test = new Action<IPSharpRuntime>((r) => {
                 r.CreateMachine(typeof(Real1));
             });
 

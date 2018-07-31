@@ -12,6 +12,10 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using BenchmarkDotNet.Attributes;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+
 namespace Microsoft.PSharp.Core.Tests.Performance
 {
     [Config(typeof(Configuration))]

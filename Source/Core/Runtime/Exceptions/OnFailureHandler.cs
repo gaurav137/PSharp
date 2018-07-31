@@ -17,7 +17,7 @@ using System;
 namespace Microsoft.PSharp
 {
     /// <summary>
-    /// Handles the <see cref="IStateMachineRuntime.OnFailure"/> event.
+    /// Handles the <see cref="IPSharpRuntime.OnFailure"/> event.
     /// </summary>
     public delegate void OnFailureHandler(Exception ex);
 }

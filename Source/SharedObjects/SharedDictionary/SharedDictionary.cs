@@ -26,8 +26,8 @@ namespace Microsoft.PSharp.SharedObjects
         /// <summary>
         /// Creates a new shared dictionary.
         /// </summary>
-        /// <param name="runtime">IStateMachineRuntime</param>
-        public static ISharedDictionary<TKey, TValue> Create<TKey, TValue>(IStateMachineRuntime runtime)
+        /// <param name="runtime">IPSharpRuntime</param>
+        public static ISharedDictionary<TKey, TValue> Create<TKey, TValue>(IPSharpRuntime runtime)
         {
             if (runtime is ProductionRuntime)
             {
@@ -47,8 +47,8 @@ namespace Microsoft.PSharp.SharedObjects
         /// Creates a new shared dictionary.
         /// </summary>
         /// <param name="comparer">Comparer for keys</param>
-        /// <param name="runtime">IStateMachineRuntime</param>
-        public static ISharedDictionary<TKey, TValue> Create<TKey, TValue>(IEqualityComparer<TKey> comparer, IStateMachineRuntime runtime)
+        /// <param name="runtime">IPSharpRuntime</param>
+        public static ISharedDictionary<TKey, TValue> Create<TKey, TValue>(IEqualityComparer<TKey> comparer, IPSharpRuntime runtime)
         {
             if (runtime is ProductionRuntime)
             {

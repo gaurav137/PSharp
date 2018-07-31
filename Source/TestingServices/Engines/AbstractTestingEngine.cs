@@ -78,7 +78,7 @@ namespace Microsoft.PSharp.TestingServices
         /// <summary>
         /// A P# test action.
         /// </summary>
-        internal Action<Runtime> TestAction;
+        internal Action<IPSharpRuntime> TestAction;
 
         /// <summary>
         /// Set of callbacks to invoke at the end
@@ -241,7 +241,7 @@ namespace Microsoft.PSharp.TestingServices
         /// </summary>
         /// <param name="configuration">Configuration</param>
         /// <param name="action">Action</param>
-        protected AbstractTestingEngine(Configuration configuration, Action<Runtime> action)
+        protected AbstractTestingEngine(Configuration configuration, Action<IPSharpRuntime> action)
         {
             this.Configuration = configuration;
             this.PerIterationCallbacks = new HashSet<Action<int>>();

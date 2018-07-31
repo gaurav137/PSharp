@@ -12,6 +12,9 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using BenchmarkDotNet.Attributes;
+using System.Threading.Tasks;
+
 namespace Microsoft.PSharp.Core.Tests.Performance
 {
     [Config(typeof(Configuration))]
@@ -108,7 +111,7 @@ namespace Microsoft.PSharp.Core.Tests.Performance
         {
             var tcs = new TaskCompletionSource<bool>();
 
-            var configuration = Configuration.Create();
+            var configuration = PSharp.Configuration.Create();
             var runtime = new ProductionRuntime(configuration);
             runtime.CreateMachine(typeof(Server), null,
                 new Server.Configure(tcs, this.Clients, this.EventsPerClient),

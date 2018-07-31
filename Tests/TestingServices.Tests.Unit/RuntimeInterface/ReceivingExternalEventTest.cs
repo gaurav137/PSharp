@@ -32,7 +32,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
 
         class Engine
         {
-            public static void Send(Runtime runtime, MachineId target)
+            public static void Send(IStateMachineRuntime runtime, MachineId target)
             {
                 runtime.SendEvent(target, new E(2));
             }
@@ -47,7 +47,8 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
 
             void InitOnEntry()
             {
-                Engine.Send(this.Runtime, this.Id);
+                var runtime = RuntimeService.GetRuntime(this.Id);
+                Engine.Send(runtime, this.Id);
             }
 
             void HandlingEvent()
@@ -59,7 +60,7 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
         [Fact]
         public void TestReceivingExternalEvents()
         {
-            var test = new Action<IStateMachineRuntime>((r) => {
+            var test = new Action<IPSharpRuntime>((r) => {
                 r.CreateMachine(typeof(M));
             });
 

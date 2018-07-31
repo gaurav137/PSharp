@@ -26,7 +26,7 @@ namespace Microsoft.PSharp.SharedObjects
         /// <summary>
         /// Machine modeling the shared register.
         /// </summary>
-        MachineId registerMachine;
+        MachineId RegisterMachine;
 
         /// <summary>
         /// The bug-finding runtime hosting this shared register.
@@ -41,11 +41,10 @@ namespace Microsoft.PSharp.SharedObjects
         public MockSharedRegister(T value, BugFindingRuntime runtime)
         {
             this.Runtime = runtime;
-            registerMachine = Runtime.CreateMachine(typeof(SharedRegisterMachine<T>));
-            Runtime.SendEvent(registerMachine, SharedRegisterEvent.SetEvent(value));
+            this.RegisterMachine = this.Runtime.CreateMachine(typeof(SharedRegisterMachine<T>));
+            this.Runtime.SendEvent(this.RegisterMachine, SharedRegisterEvent.SetEvent(value));
         }
-
-
+        
         /// <summary>
         /// Reads and updates the register.
         /// </summary>
@@ -53,8 +52,8 @@ namespace Microsoft.PSharp.SharedObjects
         /// <returns>Resulting value of the register</returns>
         public T Update(Func<T, T> func)
         {
-            var currentMachine = Runtime.GetCurrentMachine();
-            Runtime.SendEvent(registerMachine, SharedRegisterEvent.UpdateEvent(func, currentMachine.Id));
+            var currentMachine = this.Runtime.GetCurrentMachine();
+            this.Runtime.SendEvent(this.RegisterMachine, SharedRegisterEvent.UpdateEvent(func, currentMachine.Id));
             var e = currentMachine.Receive(typeof(SharedRegisterResponseEvent<T>)).Result as SharedRegisterResponseEvent<T>;
             return e.Value;
         }
@@ -65,8 +64,8 @@ namespace Microsoft.PSharp.SharedObjects
         /// <returns>Current value</returns>
         public T GetValue()
         {
-            var currentMachine = Runtime.GetCurrentMachine();
-            Runtime.SendEvent(registerMachine, SharedRegisterEvent.GetEvent(currentMachine.Id));
+            var currentMachine = this.Runtime.GetCurrentMachine();
+            this.Runtime.SendEvent(this.RegisterMachine, SharedRegisterEvent.GetEvent(currentMachine.Id));
             var e = currentMachine.Receive(typeof(SharedRegisterResponseEvent<T>)).Result as SharedRegisterResponseEvent<T>;
             return e.Value;
         }
@@ -77,7 +76,7 @@ namespace Microsoft.PSharp.SharedObjects
         /// <param name="value">Value</param>
         public void SetValue(T value)
         {
-            Runtime.SendEvent(registerMachine, SharedRegisterEvent.SetEvent(value));
+            this.Runtime.SendEvent(this.RegisterMachine, SharedRegisterEvent.SetEvent(value));
         }
     }
 }
