@@ -1613,7 +1613,7 @@ namespace Microsoft.PSharp
         /// <returns>string</returns>
         internal string GetEventWaitHandlerNames()
         {
-            string events = "";
+            string events = String.Empty;
             foreach (var ewh in this.EventWaitHandlers)
             {
                 events += " '" + ewh.EventType.FullName + "'";

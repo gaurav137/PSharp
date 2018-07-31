@@ -471,9 +471,9 @@ namespace Microsoft.PSharp
         /// </summary>
         protected Configuration()
         {
-            this.SolutionFilePath = "";
-            this.OutputFilePath = "";
-            this.ProjectName = "";
+            this.SolutionFilePath = String.Empty;
+            this.OutputFilePath = String.Empty;
+            this.ProjectName = String.Empty;
             
             this.Timeout = 0;
 
@@ -492,9 +492,9 @@ namespace Microsoft.PSharp
 
             this.RuntimeGeneration = 0;
 
-            this.AssemblyToBeAnalyzed = "";
-            this.TestingRuntimeAssembly = "";
-            this.TestMethodName = "";
+            this.AssemblyToBeAnalyzed = String.Empty;
+            this.TestingRuntimeAssembly = String.Empty;
+            this.TestMethodName = String.Empty;
 
             this.SchedulingStrategy = SchedulingStrategy.Random;
             this.ReductionStrategy = ReductionStrategy.None;
@@ -525,8 +525,8 @@ namespace Microsoft.PSharp
 
             this.AttachDebugger = false;
 
-            this.ScheduleFile = "";
-            this.ScheduleTrace = "";
+            this.ScheduleFile = String.Empty;
+            this.ScheduleTrace = String.Empty;
 
             this.EnableDataRaceDetection = false;
 
@@ -536,7 +536,7 @@ namespace Microsoft.PSharp
 
             this.ContainerId = 0;
             this.NumberOfContainers = 1;
-            this.RemoteApplicationFilePath = "";
+            this.RemoteApplicationFilePath = String.Empty;
 
             this.Verbose = 1;
             this.ShowWarnings = false;
