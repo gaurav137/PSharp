@@ -159,15 +159,6 @@ namespace Microsoft.PSharp.TestingServices
         #region runtime interface
 
         /// <summary>
-        /// Creates a fresh machine id that has not yet been bound to any machine.
-        /// </summary>
-        /// <param name="type">Type of the machine</param>
-        /// <param name="friendlyName">Friendly machine name used for logging</param>
-        /// <returns>MachineId</returns>
-
-        public MachineId CreateMachineId(Type type, string friendlyName = null) => new MachineId(type, friendlyName, this);
-
-        /// <summary>
         /// Creates a new machine of the specified type and with
         /// the specified optional event. This event can only be
         /// used to access its payload, and cannot be handled.

@@ -28,7 +28,7 @@ namespace Microsoft.PSharp
         /// <summary>
         /// The runtime that executes this machine.
         /// </summary>
-        internal BaseRuntime Runtime { get; private set; }
+        internal BaseMachineRuntime Runtime { get; private set; }
 
         /// <summary>
         /// The unique machine id.
@@ -44,12 +44,12 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Initializes this machine.
         /// </summary>
-        /// <param name="runtime">IStateMachineRuntime</param>
+        /// <param name="runtime">BaseMachineRuntime</param>
         /// <param name="mid">MachineId</param>
         /// <param name="info">MachineInfo</param>
-        internal void Initialize(IStateMachineRuntime runtime, MachineId mid, MachineInfo info)
+        internal void Initialize(BaseMachineRuntime runtime, MachineId mid, MachineInfo info)
         {
-            this.Runtime = mid.Runtime;
+            this.Runtime = runtime;
             this.Id = mid;
             this.Info = info;
         }

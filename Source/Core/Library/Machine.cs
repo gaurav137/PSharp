@@ -137,7 +137,7 @@ namespace Microsoft.PSharp
         /// <summary>
         /// The logger installed to the P# runtime.
         /// </summary>
-        protected ILogger Logger => base.Runtime.Logger;
+        protected ILogger Logger => this.Runtime.Logger;
 
         /// <summary>
         /// Gets the <see cref="Type"/> of the current state.
@@ -257,7 +257,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         protected MachineId CreateMachine(Type type, Event e = null)
         {
-            return base.Runtime.CreateMachine(null, type, null, e, this, null);
+            return this.Runtime.CreateMachine(null, type, null, e, this, null);
         }
 
         /// <summary>
@@ -271,7 +271,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         protected MachineId CreateMachine(Type type, string friendlyName, Event e = null)
         {
-            return base.Runtime.CreateMachine(null, type, friendlyName, e, this, null);
+            return this.Runtime.CreateMachine(null, type, friendlyName, e, this, null);
         }
 
         /// <summary>
@@ -285,7 +285,7 @@ namespace Microsoft.PSharp
         /// <param name="e">Event</param>
         protected void CreateMachine(MachineId mid, Type type, string friendlyName, Event e = null)
         {
-            base.Runtime.CreateMachine(mid, type, friendlyName, e, this, null);
+            this.Runtime.CreateMachine(mid, type, friendlyName, e, this, null);
         }
 
         /// <summary>
@@ -299,7 +299,7 @@ namespace Microsoft.PSharp
         /// <returns>MachineId</returns>
         protected MachineId CreateRemoteMachine(Type type, string endpoint, Event e = null)
         {
-            return base.Runtime.CreateRemoteMachine(type, null, endpoint, e, this, null);
+            return this.Runtime.CreateRemoteMachine(type, null, endpoint, e, this, null);
         }
 
         /// <summary>
@@ -315,7 +315,7 @@ namespace Microsoft.PSharp
         protected MachineId CreateRemoteMachine(Type type, string friendlyName,
             string endpoint, Event e = null)
         {
-            return base.Runtime.CreateRemoteMachine(type, friendlyName, endpoint, e, this, null);
+            return this.Runtime.CreateRemoteMachine(type, friendlyName, endpoint, e, this, null);
         }
 
         /// <summary>
@@ -330,7 +330,7 @@ namespace Microsoft.PSharp
             this.Assert(mid != null, $"Machine '{base.Id}' is sending to a null machine.");
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is sending a null event.");
-            base.Runtime.SendEvent(mid, e, this, options);
+            this.Runtime.SendEvent(mid, e, this, options);
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace Microsoft.PSharp
             this.Assert(mid != null, $"Machine '{base.Id}' is sending to a null machine.");
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is sending a null event.");
-            base.Runtime.SendEventRemotely(mid, e, this, options);
+            this.Runtime.SendEventRemotely(mid, e, this, options);
         }
 
         /// <summary>
@@ -367,7 +367,7 @@ namespace Microsoft.PSharp
         {
             // If the event is null, then report an error and exit.
             this.Assert(e != null, $"Machine '{base.Id}' is sending a null event.");
-            base.Runtime.Monitor(type, this, e);
+            this.Runtime.Monitor(type, this, e);
         }
 
         /// <summary>
@@ -440,7 +440,7 @@ namespace Microsoft.PSharp
             this.Assert(e != null, $"Machine '{base.Id}' is raising a null event.");
             this.RaisedEvent = new EventInfo(e, new EventOriginInfo(
                 base.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
-            base.Runtime.NotifyRaisedEvent(this, this.RaisedEvent);
+            this.Runtime.NotifyRaisedEvent(this, this.RaisedEvent);
         }
 
         /// <summary>
@@ -451,7 +451,7 @@ namespace Microsoft.PSharp
         protected internal virtual Task<Event> Receive(params Type[] eventTypes)
         {
             this.Assert(!this.Info.IsHalted, $"Machine '{base.Id}' invoked Receive while halted.");
-            base.Runtime.NotifyReceiveCalled(this);
+            this.Runtime.NotifyReceiveCalled(this);
 
             lock (this.Inbox)
             {
@@ -475,7 +475,7 @@ namespace Microsoft.PSharp
         protected internal virtual Task<Event> Receive(Type eventType, Func<Event, bool> predicate)
         {
             this.Assert(!this.Info.IsHalted, $"Machine '{base.Id}' invoked Receive while halted.");
-            base.Runtime.NotifyReceiveCalled(this);
+            this.Runtime.NotifyReceiveCalled(this);
 
             lock (this.Inbox)
             {
@@ -495,7 +495,7 @@ namespace Microsoft.PSharp
         protected internal virtual Task<Event> Receive(params Tuple<Type, Func<Event, bool>>[] events)
         {
             this.Assert(!this.Info.IsHalted, $"Machine '{base.Id}' invoked Receive while halted.");
-            base.Runtime.NotifyReceiveCalled(this);
+            this.Runtime.NotifyReceiveCalled(this);
 
             lock (this.Inbox)
             {
@@ -515,7 +515,7 @@ namespace Microsoft.PSharp
         /// </summary>
         protected void Pop()
         {
-            base.Runtime.NotifyPop(this);
+            this.Runtime.NotifyPop(this);
             this.IsPopInvoked = true;
         }
 
@@ -526,7 +526,7 @@ namespace Microsoft.PSharp
         /// <returns>Boolean</returns>
         protected bool Random()
         {
-            return base.Runtime.GetNondeterministicBooleanChoice(this, 2);
+            return this.Runtime.GetNondeterministicBooleanChoice(this, 2);
         }
 
         /// <summary>
@@ -539,7 +539,7 @@ namespace Microsoft.PSharp
         /// <returns>Boolean</returns>
         protected bool Random(int maxValue)
         {
-            return base.Runtime.GetNondeterministicBooleanChoice(this, maxValue);
+            return this.Runtime.GetNondeterministicBooleanChoice(this, maxValue);
         }
 
         /// <summary>
@@ -557,7 +557,7 @@ namespace Microsoft.PSharp
         {
             var havocId = string.Format("{0}_{1}_{2}_{3}_{4}", base.Id.Name, this.CurrentStateName,
                 callerMemberName, callerFilePath, callerLineNumber);
-            return base.Runtime.GetFairNondeterministicBooleanChoice(this, havocId);
+            return this.Runtime.GetFairNondeterministicBooleanChoice(this, havocId);
         }
 
         /// <summary>
@@ -569,7 +569,7 @@ namespace Microsoft.PSharp
         /// <returns>Integer</returns>
         protected int RandomInteger(int maxValue)
         {
-            return base.Runtime.GetNondeterministicIntegerChoice(this, maxValue);
+            return this.Runtime.GetNondeterministicIntegerChoice(this, maxValue);
         }
 
         /// <summary>
@@ -579,7 +579,7 @@ namespace Microsoft.PSharp
         /// <param name="predicate">Predicate</param>
         protected void Assert(bool predicate)
         {
-            base.Runtime.Assert(predicate);
+            this.Runtime.Assert(predicate);
         }
 
         /// <summary>
@@ -591,7 +591,7 @@ namespace Microsoft.PSharp
         /// <param name="args">Message arguments</param>
         protected void Assert(bool predicate, string s, params object[] args)
         {
-            base.Runtime.Assert(predicate, s, args);
+            this.Runtime.Assert(predicate, s, args);
         }
 
         #endregion
@@ -618,12 +618,12 @@ namespace Microsoft.PSharp
                 if (eventWaitHandler != null)
                 {
                     this.EventWaitHandlers.Clear();
-                    base.Runtime.NotifyReceivedEvent(this, eventInfo);
+                    this.Runtime.NotifyReceivedEvent(this, eventInfo);
                     this.ReceiveCompletionSource.SetResult(eventInfo.Event);
                     return;
                 }
 
-                base.Runtime.Logger.OnEnqueue(this.Id, eventInfo.EventName);
+                this.Runtime.Logger.OnEnqueue(this.Id, eventInfo.EventName);
 
                 this.Inbox.AddLast(eventInfo);
 
@@ -643,7 +643,7 @@ namespace Microsoft.PSharp
                         $"in the input queue of machine '{this}'");
                 }
 
-                if (!this.IsRunning && base.Runtime.CheckStartEventHandler(this))
+                if (!this.IsRunning && this.Runtime.CheckStartEventHandler(this))
                 {
                     this.IsRunning = true;
                     runNewHandler = true;
@@ -754,7 +754,7 @@ namespace Microsoft.PSharp
         /// <returns>EventInfo</returns>
         private EventInfo GetDefaultEvent()
         {
-            base.Runtime.Logger.OnDefault(this.Id, this.CurrentStateName);
+            this.Runtime.Logger.OnDefault(this.Id, this.CurrentStateName);
             return new EventInfo(new Default(), new EventOriginInfo(
                 base.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
         }
@@ -775,7 +775,7 @@ namespace Microsoft.PSharp
             }
 
             bool completed = false;
-            while (!this.Info.IsHalted && base.Runtime.IsRunning)
+            while (!this.Info.IsHalted && this.Runtime.IsRunning)
             {
                 var defaultHandling = false;
                 var dequeued = false;
@@ -789,7 +789,7 @@ namespace Microsoft.PSharp
                     var hasDefaultHandler = HasDefaultHandler();
                     if (hasDefaultHandler)
                     {
-                        base.Runtime.NotifyDefaultEventHandlerCheck(this);
+                        this.Runtime.NotifyDefaultEventHandlerCheck(this);
                     }
 
                     lock (this.Inbox)
@@ -819,18 +819,18 @@ namespace Microsoft.PSharp
                     // Notifies the runtime for a new event to handle. This is only used
                     // during bug-finding and operation bounding, because the runtime has
                     // to schedule a machine when a new operation is dequeued.
-                    base.Runtime.NotifyDequeuedEvent(this, nextEventInfo);
+                    this.Runtime.NotifyDequeuedEvent(this, nextEventInfo);
                 }
                 else if (defaultHandling)
                 {
                     // If the default event was handled, then notify the runtime.
                     // This is only used during bug-finding, because the runtime
                     // has to schedule a machine between default handlers.
-                    base.Runtime.NotifyDefaultHandlerFired(this);
+                    this.Runtime.NotifyDefaultHandlerFired(this);
                 }
                 else
                 {
-                    base.Runtime.NotifyHandleRaisedEvent(this, nextEventInfo);
+                    this.Runtime.NotifyHandleRaisedEvent(this, nextEventInfo);
                 }
 
                 // Assigns the received event.
@@ -936,7 +936,7 @@ namespace Microsoft.PSharp
                     }
 
                     this.DoStatePop();
-                    base.Runtime.Logger.OnPopUnhandledEvent(this.Id, this.CurrentStateName, e.GetType().FullName);
+                    this.Runtime.Logger.OnPopUnhandledEvent(this.Id, this.CurrentStateName, e.GetType().FullName);
                     continue;
                 }
 
@@ -951,9 +951,9 @@ namespace Microsoft.PSharp
         private async Task Do(string actionName)
         {
             var cachedAction = this.ActionMap[actionName];
-            base.Runtime.NotifyInvokedAction(this, cachedAction.MethodInfo, this.ReceivedEvent);
+            this.Runtime.NotifyInvokedAction(this, cachedAction.MethodInfo, this.ReceivedEvent);
             await this.ExecuteAction(cachedAction);
-            base.Runtime.NotifyCompletedAction(this, cachedAction.MethodInfo, this.ReceivedEvent);
+            this.Runtime.NotifyCompletedAction(this, cachedAction.MethodInfo, this.ReceivedEvent);
 
             if (this.IsPopInvoked)
             {
@@ -967,7 +967,7 @@ namespace Microsoft.PSharp
         /// </summary>
         internal async Task ExecuteCurrentStateOnEntry()
         {
-            base.Runtime.NotifyEnteredState(this);
+            this.Runtime.NotifyEnteredState(this);
 
             CachedAction entryAction = null;
             if (this.StateStack.Peek().EntryAction != null)
@@ -979,9 +979,9 @@ namespace Microsoft.PSharp
             // if there is one available.
             if (entryAction != null)
             {
-                base.Runtime.NotifyInvokedAction(this, entryAction.MethodInfo, this.ReceivedEvent);
+                this.Runtime.NotifyInvokedAction(this, entryAction.MethodInfo, this.ReceivedEvent);
                 await this.ExecuteAction(entryAction);
-                base.Runtime.NotifyCompletedAction(this, entryAction.MethodInfo, this.ReceivedEvent);
+                this.Runtime.NotifyCompletedAction(this, entryAction.MethodInfo, this.ReceivedEvent);
             }
 
             if (this.IsPopInvoked)
@@ -997,7 +997,7 @@ namespace Microsoft.PSharp
         /// <param name="eventHandlerExitActionName">Action name</param>
         internal async Task ExecuteCurrentStateOnExit(string eventHandlerExitActionName)
         {
-            base.Runtime.NotifyExitedState(this);
+            this.Runtime.NotifyExitedState(this);
 
             CachedAction exitAction = null;
             if (this.StateStack.Peek().ExitAction != null)
@@ -1011,9 +1011,9 @@ namespace Microsoft.PSharp
             // if there is one available.
             if (exitAction != null)
             {
-                base.Runtime.NotifyInvokedAction(this, exitAction.MethodInfo, this.ReceivedEvent);
+                this.Runtime.NotifyInvokedAction(this, exitAction.MethodInfo, this.ReceivedEvent);
                 await this.ExecuteAction(exitAction);
-                base.Runtime.NotifyCompletedAction(this, exitAction.MethodInfo, this.ReceivedEvent);
+                this.Runtime.NotifyCompletedAction(this, exitAction.MethodInfo, this.ReceivedEvent);
             }
 
             // Invokes the exit action of the event handler,
@@ -1021,9 +1021,9 @@ namespace Microsoft.PSharp
             if (eventHandlerExitActionName != null)
             {
                 CachedAction eventHandlerExitAction = this.ActionMap[eventHandlerExitActionName];
-                base.Runtime.NotifyInvokedAction(this, eventHandlerExitAction.MethodInfo, this.ReceivedEvent);
+                this.Runtime.NotifyInvokedAction(this, eventHandlerExitAction.MethodInfo, this.ReceivedEvent);
                 await this.ExecuteAction(eventHandlerExitAction);
-                base.Runtime.NotifyCompletedAction(this, eventHandlerExitAction.MethodInfo, this.ReceivedEvent);
+                this.Runtime.NotifyCompletedAction(this, eventHandlerExitAction.MethodInfo, this.ReceivedEvent);
             }
 
             base.Info.IsInsideOnExit = false;
@@ -1040,7 +1040,7 @@ namespace Microsoft.PSharp
         {
             // This is called within the exception filter so the stack has not yet been unwound.
             // If OnFailure does not fail-fast, return false to process the exception normally.
-            base.Runtime.RaiseOnFailureEvent(new MachineActionExceptionFilterException(action.MethodInfo.Name, ex));
+            this.Runtime.RaiseOnFailureEvent(new MachineActionExceptionFilterException(action.MethodInfo.Name, ex));
             return false;
         }
 
@@ -1155,7 +1155,7 @@ namespace Microsoft.PSharp
         /// <param name="s">Type of the state</param>
         private async Task PushState(Type s)
         {
-            base.Runtime.Logger.OnPush(this.Id, this.CurrentStateName, s.FullName);
+            this.Runtime.Logger.OnPush(this.Id, this.CurrentStateName, s.FullName);
 
             var nextState = StateMap[this.GetType()].First(val => val.GetType().Equals(s));
             this.DoStatePush(nextState);
@@ -1180,7 +1180,7 @@ namespace Microsoft.PSharp
             }
 
             this.DoStatePop();
-            base.Runtime.Logger.OnPop(this.Id, prevStateName, this.CurrentStateName);
+            this.Runtime.Logger.OnPop(this.Id, prevStateName, this.CurrentStateName);
 
             // Watch out for an extra pop.
             this.Assert(this.CurrentState != null, $"Machine '{base.Id}' popped with no matching push.");
@@ -1300,7 +1300,7 @@ namespace Microsoft.PSharp
 
                     if (eventWaitHandler != null)
                     {
-                        base.Runtime.Logger.OnReceive(this.Id, this.CurrentStateName, currentEventInfo.EventName, wasBlocked: false);
+                        this.Runtime.Logger.OnReceive(this.Id, this.CurrentStateName, currentEventInfo.EventName, wasBlocked: false);
                         this.EventWaitHandlers.Clear();
                         this.ReceiveCompletionSource.SetResult(currentEventInfo.Event);
                         eventInfoInInbox = currentEventInfo;
@@ -1312,7 +1312,7 @@ namespace Microsoft.PSharp
                 }
             }
 
-            base.Runtime.NotifyWaitEvents(this, eventInfoInInbox);
+            this.Runtime.NotifyWaitEvents(this, eventInfoInInbox);
 
             return this.ReceiveCompletionSource.Task;
         }
@@ -1784,7 +1784,7 @@ namespace Microsoft.PSharp
                 state = this.CurrentStateName;
             }
 
-            base.Runtime.WrapAndThrowException(ex, $"Exception '{ex.GetType()}' was thrown " +
+            this.Runtime.WrapAndThrowException(ex, $"Exception '{ex.GetType()}' was thrown " +
                 $"in machine '{base.Id}', state '{state}', action '{actionName}', " +
                 $"'{ex.Source}':\n" +
                 $"   {ex.Message}\n" +
@@ -1883,7 +1883,7 @@ namespace Microsoft.PSharp
             lock (this.Inbox)
             {
                 this.Info.IsHalted = true;
-                base.Runtime.NotifyHalted(this, this.Inbox);
+                this.Runtime.NotifyHalted(this, this.Inbox);
                 this.Inbox.Clear();
                 this.EventWaitHandlers.Clear();
                 this.ReceivedEvent = null;

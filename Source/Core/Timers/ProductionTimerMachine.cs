@@ -107,7 +107,8 @@ namespace Microsoft.PSharp.Timers
 			{
 				if (this.IsTimerEnabled)
 				{
-					Runtime.SendEvent(this.Client, new TimerElapsedEvent(tid));
+                    // TODO: check this
+					this.Runtime.SendEvent(this.Client, new TimerElapsedEvent(tid), this, null);
 				}
 			}
 		}

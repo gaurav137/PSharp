@@ -50,7 +50,8 @@ namespace Microsoft.PSharp.Timers
             var mid = this.Runtime.CreateMachineId(this.Runtime.GetTimerMachineType());
             var tid = new TimerId(mid, payload);
 
-            this.Runtime.CreateMachine(mid, this.Runtime.GetTimerMachineType(), new InitTimer(this.Id, tid, IsPeriodic, period));
+            // TODO: check this
+            this.Runtime.CreateMachine(mid, this.Runtime.GetTimerMachineType(), null, new InitTimer(this.Id, tid, IsPeriodic, period), this, null);
 
             timers.Add(tid);
             return tid;
