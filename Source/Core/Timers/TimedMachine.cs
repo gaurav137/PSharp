@@ -13,7 +13,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Timers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -24,16 +23,10 @@ namespace Microsoft.PSharp.Timers
 	/// </summary>
 	public abstract class TimedMachine : Machine
 	{
-		#region private fields
-
 		/// <summary>
 		/// Set of currently active timers.
 		/// </summary>
 		HashSet<TimerId> timers = new HashSet<TimerId>();
-
-        #endregion
-
-        #region Timer API
 
         /// <summary>
         /// Start a timer. 
@@ -50,12 +43,10 @@ namespace Microsoft.PSharp.Timers
             var mid = this.Runtime.CreateMachineId(this.Runtime.GetTimerMachineType());
             var tid = new TimerId(mid, payload);
 
-            // TODO: check this
             this.Runtime.CreateMachine(mid, this.Runtime.GetTimerMachineType(), null, new InitTimer(this.Id, tid, IsPeriodic, period), this, null);
 
             timers.Add(tid);
             return tid;
-
         }
 
 		/// <summary>
@@ -87,6 +78,5 @@ namespace Microsoft.PSharp.Timers
                 }
             }
 		}
-		#endregion
 	}
 }

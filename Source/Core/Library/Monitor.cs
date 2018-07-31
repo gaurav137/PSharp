@@ -30,8 +30,6 @@ namespace Microsoft.PSharp
     /// </summary>
     public abstract class Monitor
     {
-        #region static fields
-
         /// <summary>
         /// Map from monitor types to a set of all
         /// possible states types.
@@ -49,10 +47,6 @@ namespace Microsoft.PSharp
         /// available actions.
         /// </summary>
         private static ConcurrentDictionary<Type, Dictionary<string, MethodInfo>> MonitorActionMap;
-
-        #endregion
-
-        #region fields
 
         /// <summary>
         /// The runtime that executes this monitor.
@@ -101,10 +95,6 @@ namespace Microsoft.PSharp
         /// Checks if the current action called a transition statement.
         /// </summary>
         internal bool CurrentActionCalledTransitionStatement;
-
-        #endregion
-
-        #region properties
 
         /// <summary>
         /// The unique monitor id.
@@ -179,10 +169,6 @@ namespace Microsoft.PSharp
         /// </summary>
         protected internal Event ReceivedEvent { get; private set; }
 
-        #endregion
-
-        #region initialization
-
         /// <summary>
         /// Static constructor.
         /// </summary>
@@ -215,9 +201,7 @@ namespace Microsoft.PSharp
             this.CurrentActionCalledTransitionStatement = false;
         }
 
-        #endregion
-
-        #region P# user API
+        #region user interface
 
         /// <summary>
         /// Returns from the execution context, and transitions
@@ -227,7 +211,7 @@ namespace Microsoft.PSharp
         protected void Goto<S>() where S : MonitorState
         {
 #pragma warning disable 618
-            Goto(typeof(S));
+            this.Goto(typeof(S));
 #pragma warning restore 618
         }
 
@@ -259,7 +243,7 @@ namespace Microsoft.PSharp
             EventInfo raisedEvent = new EventInfo(e, new EventOriginInfo(
                 this.Id, this.GetType().Name, StateGroup.GetQualifiedStateName(this.CurrentState)));
             this.Runtime.NotifyRaisedEvent(this, raisedEvent);
-            this.HandlingEvent(e);
+            this.HandleEvent(e);
         }
 
         /// <summary>
@@ -296,7 +280,7 @@ namespace Microsoft.PSharp
         {
             this.Runtime.Logger.OnMonitorEvent(this.GetType().Name, this.Id, this.CurrentStateName,
                 e.GetType().FullName, isProcessing: true);
-            this.HandlingEvent(e);
+            this.HandleEvent(e);
         }
 
         #endregion
@@ -307,7 +291,7 @@ namespace Microsoft.PSharp
         /// Handles the given event.
         /// </summary>
         /// <param name="e">Event to handle</param>
-        private void HandlingEvent(Event e)
+        private void HandleEvent(Event e)
         {
             this.CurrentActionCalledTransitionStatement = false;
 

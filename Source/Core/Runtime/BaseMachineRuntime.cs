@@ -39,7 +39,7 @@ namespace Microsoft.PSharp
         /// <param name="friendlyName">Friendly machine name used for logging</param>
         /// <returns>MachineId</returns>
 
-        public MachineId CreateMachineId(Type type, string friendlyName = null) => new MachineId(type, friendlyName, this);
+        public MachineId CreateMachineId(Type type, string friendlyName = null) => new MachineId(this, type, friendlyName);
 
         #endregion
 
@@ -115,7 +115,7 @@ namespace Microsoft.PSharp
 
             if (mid == null)
             {
-                mid = new MachineId(type, friendlyName, this);
+                mid = new MachineId(this, type, friendlyName);
             }
             else
             {

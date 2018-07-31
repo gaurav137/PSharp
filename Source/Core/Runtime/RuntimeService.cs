@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="RuntimeFactory.cs">
+// <copyright file="RuntimeService.cs">
 //      Copyright (c) Microsoft Corporation. All rights reserved.
 // 
 //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -15,9 +15,9 @@
 namespace Microsoft.PSharp
 {
     /// <summary>
-    /// State-machine runtime factory.
+    /// The P# runtime service.
     /// </summary>
-    public static class RuntimeFactory
+    public static class RuntimeService
     {
         /// <summary>
         /// Creates a new state-machine runtime.
@@ -37,6 +37,19 @@ namespace Microsoft.PSharp
         public static IStateMachineRuntime Create(Configuration configuration)
         {
             return new ProductionRuntime(configuration);
+        }
+
+        /// <summary>
+        /// Returns the runtime associated with the specified <see cref="MachineId"/>.
+        /// </summary>
+        /// <param name="mid">MachineId</param>
+        /// <returns>IStateMachineRuntime</returns>
+        public static IStateMachineRuntime GetRuntime(MachineId mid)
+        {
+            mid.Runtime.Assert(mid.Runtime is IStateMachineRuntime,
+                "Machine id '{0}' does not execute on a 'IStateMachineRuntime' runtime.",
+                mid.Name);
+            return mid.Runtime as IStateMachineRuntime;
         }
     }
 }

@@ -19,7 +19,7 @@ using System.ComponentModel;
 namespace Microsoft.PSharp
 {
     /// <summary>
-    /// Abstract class representing a machine.
+    /// Base class implementing a P# machine.
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -83,7 +83,7 @@ namespace Microsoft.PSharp
         /// <returns>int</returns>
         public override int GetHashCode()
         {
-            return this.Id.GetHashCode();
+            return this.Id.Value.GetHashCode();
         }
 
         /// <summary>

@@ -13,7 +13,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Concurrent;
 using System.Runtime.Serialization;
 using System.Threading;
 
@@ -26,7 +25,7 @@ namespace Microsoft.PSharp
     public sealed class MachineId : IEquatable<MachineId>, IComparable<MachineId>
     {
         /// <summary>
-        /// The runtime that executes the machine with this id.
+        /// The P# runtime that executes the machine with this id.
         /// </summary>
         internal BaseRuntime Runtime { get; private set; }
 
@@ -49,10 +48,16 @@ namespace Microsoft.PSharp
         public readonly string Type;
 
         /// <summary>
-        /// Unique id value typically used for testing.
+        /// Unique id value.
         /// </summary>
         [DataMember]
-        internal readonly ulong Value;
+        public readonly ulong Value;
+
+        /// <summary>
+        /// Generation of the runtime that created this machine id.
+        /// </summary>
+        [DataMember]
+        public readonly ulong Generation;
 
         /// <summary>
         /// Endpoint.
@@ -63,54 +68,72 @@ namespace Microsoft.PSharp
         /// <summary>
         /// Creates a new machine id.
         /// </summary>
+        /// <param name="runtime">BaseRuntime</param>
         /// <param name="type">Machine type</param>
         /// <param name="friendlyName">Friendly machine name</param>
-        /// <param name="runtime">BaseRuntime</param>
-        internal MachineId(Type type, string friendlyName, BaseRuntime runtime) 
-            : this(type.FullName, friendlyName, runtime)
-        {
-        }
+        internal MachineId(BaseRuntime runtime, Type type, string friendlyName)
+            : this(runtime, type.FullName, friendlyName, runtime.Configuration.RuntimeGeneration, runtime.NetworkProvider.GetLocalEndpoint())
+        { }
 
         /// <summary>
-        /// Creates a new machine id.
+        /// Create a fresh MachineId borrowing information from a given id.
         /// </summary>
-        /// <param name="type">Machine type string</param>
-        /// <param name="friendlyName">Friendly machine name</param>
+        /// <param name="mid">MachineId</param>
+        internal MachineId(MachineId mid)
+            : this(mid.Runtime, mid.Type, mid.FriendlyName, mid.Generation, mid.Endpoint)
+        { }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         /// <param name="runtime">BaseRuntime</param>
-        internal MachineId(string type, string friendlyName, BaseRuntime runtime)
+        /// <param name="type">Machine type</param>
+        /// <param name="friendlyName">Friendly machine name</param>
+        /// <param name="generation">Runtime generation</param>
+        /// <param name="endpoint">Endpoint</param>
+        private MachineId(BaseRuntime runtime, string type, string friendlyName, ulong generation, string endpoint)
         {
-            Type = type;
-            Runtime = runtime;
-            Endpoint = Runtime.NetworkProvider.GetLocalEndpoint();
-
             // Atomically increments and safely wraps into an unsigned long.
-            Value = (ulong)Interlocked.Increment(ref runtime.MachineIdCounter) - 1;
-
+            this.Value = (ulong)Interlocked.Increment(ref runtime.MachineIdCounter) - 1;
             // Checks for overflow.
-            Runtime.Assert(Value != ulong.MaxValue, "Detected MachineId overflow.");
+            this.Runtime.Assert(this.Value != ulong.MaxValue, "Detected MachineId overflow.");
 
-            if (friendlyName != null && friendlyName.Length > 0)
+            this.FriendlyName = friendlyName;
+            this.Runtime = runtime;
+            this.Endpoint = endpoint;
+            this.Generation = generation;
+            this.Type = type;
+
+            if (endpoint != null && endpoint.Length > 0 && friendlyName != null && friendlyName.Length > 0)
             {
-                Name = string.Format("{0}({1})", friendlyName, Value);
+                this.Name = string.Format("{0}.{1}({2})", endpoint, friendlyName, Value);
+            }
+            else if (endpoint != null && endpoint.Length > 0)
+            {
+                this.Name = string.Format("{0}({1})", type, Value);
+            }
+            else if (friendlyName != null && friendlyName.Length > 0)
+            {
+                this.Name = string.Format("{0}({1})", friendlyName, Value);
             }
             else
             {
-                Name = string.Format("{0}({1})", Type, Value);
+                this.Name = string.Format("{0}({1})", type, Value);
             }
         }
 
         /// <summary>
-        /// Binds this machine id to the specified runtime.
+        /// Bind the machine id.
         /// </summary>
         /// <param name="runtime">BaseRuntime</param>
         internal void Bind(BaseRuntime runtime)
         {
-            Runtime = runtime;
+            this.Runtime = runtime;
         }
 
         /// <summary>
-        /// Determines whether the specified System.Object is equal
-        /// to the current System.Object.
+        /// Determines whether the specified <see cref="Object"/> is equal
+        /// to the current <see cref="Object"/>.
         /// </summary>
         /// <param name="obj">Object</param>
         /// <returns>Boolean</returns>
@@ -127,7 +150,7 @@ namespace Microsoft.PSharp
                 return false;
             }
 
-            return Value == mid.Value;
+            return this.Value == mid.Value && this.Generation == mid.Generation;
         }
 
         /// <summary>
@@ -137,7 +160,8 @@ namespace Microsoft.PSharp
         public override int GetHashCode()
         {
             int hash = 17;
-            hash = hash * 23 + Value.GetHashCode();
+            hash = hash * 23 + this.Value.GetHashCode();
+            hash = hash * 23 + this.Generation.GetHashCode();
             return hash;
         }
 
@@ -147,14 +171,26 @@ namespace Microsoft.PSharp
         /// <returns>string</returns>
         public override string ToString()
         {
-            return (string.IsNullOrWhiteSpace(Endpoint) ? Name : $"{Endpoint}|||{Type}|||{Name}");
+            return this.Name;
         }
 
+        /// <summary>
+        /// Indicates whether the specified <see cref="MachineId"/> is equal
+        /// to the current <see cref="MachineId"/>.
+        /// </summary>
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns>true if the current object is equal to the other parameter; otherwise, false.</returns>
         public bool Equals(MachineId other)
         {
             return this.Equals((object)other);
         }
 
+        /// <summary>
+        /// Compares the specified <see cref="MachineId"/> with the current
+        /// <see cref="MachineId"/> for ordering or sorting purposes.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public int CompareTo(MachineId other)
         {
             return string.Compare(this.Name, other == null ? null : other.Name);

@@ -24,7 +24,7 @@ namespace Microsoft.PSharp.Net
         /// <summary>
         /// Instance of the state-machine runtime.
         /// </summary>
-        private IStateMachineRuntime Runtime;
+        private BaseMachineRuntime Runtime;
 
         /// <summary>
         /// The local endpoint.
@@ -34,8 +34,8 @@ namespace Microsoft.PSharp.Net
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="runtime">IStateMachineRuntime</param>
-        public LocalNetworkProvider(IStateMachineRuntime runtime)
+        /// <param name="runtime">BaseMachineRuntime</param>
+        internal LocalNetworkProvider(BaseMachineRuntime runtime)
         {
             this.Runtime = runtime;
             this.LocalEndpoint = "";
@@ -55,7 +55,7 @@ namespace Microsoft.PSharp.Net
         MachineId INetworkProvider.RemoteCreateMachine(Type type, string friendlyName,
             string endpoint, Event e)
         {
-            return this.Runtime.CreateMachine(type, friendlyName, e);
+            return this.Runtime.CreateMachine(null, type, friendlyName, e, null, null);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Microsoft.PSharp.Net
         /// <param name="e">Event</param>
         void INetworkProvider.RemoteSend(MachineId target, Event e)
         {
-            this.Runtime.SendEvent(target, e);
+            this.Runtime.SendEvent(target, e, null, null);
         }
 
         /// <summary>

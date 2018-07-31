@@ -42,16 +42,15 @@ namespace Microsoft.PSharp.IO
         public bool IsVerbose => this.Configuration.Verbose >= LoggingVerbosity;
 
         /// <summary>
-        /// Constructs the logger. The logger will be assigned the Runtime's Configuration
-        /// object when it is passed to <see cref="Runtime.SetLogger(ILogger)"/>.
+        /// Constructs the logger. The logger will be assigned the runtime
+        /// <see cref="PSharp.Configuration"/> object when it is passed to
+        /// <see cref="IPSharpRuntime.SetLogger(ILogger)"/>.
         /// </summary>
         /// <param name="loggingVerbosity">The initial logging verbosity level.</param>
         public StateMachineLogger(int loggingVerbosity = 2)
         {
             this.LoggingVerbosity = loggingVerbosity;
         }
-
-        #region output
 
         /// <summary>
         /// Writes the specified string value.
@@ -80,10 +79,6 @@ namespace Microsoft.PSharp.IO
         /// <param name="format">Text</param>
         /// <param name="args">Arguments</param>
         public abstract void WriteLine(string format, params object[] args);
-
-        #endregion output
-
-        #region events
 
         /// <summary>
         /// Called when an event is about to be enqueued to a machine.
@@ -729,15 +724,9 @@ namespace Microsoft.PSharp.IO
             return $"<StrategyLog> Found bug using '{strategy}' strategy.{desc}";
         }
 
-        #endregion output
-
-        #region IDisposable
-
         /// <summary>
         /// Disposes the logger.
         /// </summary>
         public abstract void Dispose();
-
-        #endregion IDisposable
     }
 }

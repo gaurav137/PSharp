@@ -29,19 +29,14 @@ namespace Microsoft.PSharp
     internal abstract class BaseRuntime : IPSharpRuntime
     {
         /// <summary>
-        /// Monotonically increasing machine id counter.
-        /// </summary>
-        internal long MachineIdCounter;
-
-        /// <summary>
-        /// Counter for each type of object in that runtime
-        /// </summary>
-        internal ConcurrentDictionary<string, ulong> typeCounter;
-
-        /// <summary>
         /// The configuration used by the runtime.
         /// </summary>
         internal Configuration Configuration;
+
+        /// <summary>
+        /// Monotonically increasing machine id counter.
+        /// </summary>
+        internal long MachineIdCounter;
 
         /// <summary>
         /// Records if the runtime is running.
@@ -52,6 +47,11 @@ namespace Microsoft.PSharp
         /// Map from unique machine ids to machines.
         /// </summary>
         protected ConcurrentDictionary<MachineId, Machine> MachineMap;
+
+        /// <summary>
+        /// Counter for each type of object in that runtime
+        /// </summary>
+        internal ConcurrentDictionary<string, ulong> typeCounter;
 
         /// <summary>
         /// Type of Timer machine (used by TMachine)
@@ -90,7 +90,7 @@ namespace Microsoft.PSharp
         {
             this.MachineMap = new ConcurrentDictionary<MachineId, Machine>();
             // TODO: fix
-            this.NetworkProvider = new LocalNetworkProvider(this as IStateMachineRuntime);
+            this.NetworkProvider = new LocalNetworkProvider(this as BaseMachineRuntime);
             this.SetLogger(new ConsoleLogger());
             this.IsRunning = true;
             this.typeCounter = new ConcurrentDictionary<string, ulong>();
@@ -640,7 +640,7 @@ namespace Microsoft.PSharp
         {
             this.NetworkProvider.Dispose();
             // TODO: fix
-            this.NetworkProvider = new LocalNetworkProvider(this as IStateMachineRuntime);
+            this.NetworkProvider = new LocalNetworkProvider(this as BaseMachineRuntime);
         }
 
         #endregion

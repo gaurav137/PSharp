@@ -561,7 +561,7 @@ namespace Microsoft.PSharp
             base.Assert(type.IsSubclassOf(typeof(Monitor)), $"Type '{type.Name}' " +
                 "is not a subclass of Monitor.\n");
 
-            MachineId mid = new MachineId(type, null, this);
+            MachineId mid = new MachineId(this, type, null);
             Monitor monitor = (Monitor)Activator.CreateInstance(type);
 
             monitor.Initialize(mid);
