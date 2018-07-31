@@ -56,6 +56,11 @@ namespace Microsoft.PSharp.TestingServices
         internal MethodInfo TestRuntimeFactoryMethod;
 
         /// <summary>
+        /// The P# test runtime get type method.
+        /// </summary>
+        private MethodInfo TestRuntimeGetTypeMethod;
+
+        /// <summary>
         /// A P# test method.
         /// </summary>
         internal MethodInfo TestMethod;
@@ -209,6 +214,7 @@ namespace Microsoft.PSharp.TestingServices
                 }
 
                 this.FindRuntimeFactoryMethod();
+                this.FindRuntimeGetTypeMethod();
             }
 
             this.FindEntryPoint();
@@ -426,8 +432,6 @@ namespace Microsoft.PSharp.TestingServices
         {
             BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.InvokeMethod;
             List<MethodInfo> runtimeFactoryMethods = this.FindTestMethodsWithAttribute(typeof(TestRuntimeCreate), flags, this.RuntimeAssembly);
-            foreach (var x in runtimeFactoryMethods)
-                Console.WriteLine(x.Name);
 
             if (runtimeFactoryMethods.Count == 0)
             {
@@ -458,6 +462,41 @@ namespace Microsoft.PSharp.TestingServices
             }
 
             this.TestRuntimeFactoryMethod = runtimeFactoryMethods[0];
+        }
+
+        /// <summary>
+        /// Finds the testing runtime factory method, if one is provided.
+        /// </summary>
+        private void FindRuntimeGetTypeMethod()
+        {
+            BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.InvokeMethod;
+            List<MethodInfo> runtimeGetTypeMethods = this.FindTestMethodsWithAttribute(typeof(TestRuntimeGetType), flags, this.RuntimeAssembly);
+
+            if (runtimeGetTypeMethods.Count == 0)
+            {
+                Error.ReportAndExit($"Failed to find a testing runtime get type method in the '{this.RuntimeAssembly.FullName}' assembly.");
+            }
+            else if (runtimeGetTypeMethods.Count > 1)
+            {
+                Error.ReportAndExit("Only one testing runtime get type method can be declared with " +
+                    $"the attribute '{typeof(TestRuntimeGetType).FullName}'. " +
+                    $"'{runtimeGetTypeMethods.Count}' get type methods were found instead.");
+            }
+
+            if (runtimeGetTypeMethods[0].ReturnType != typeof(Type) ||
+                runtimeGetTypeMethods[0].ContainsGenericParameters ||
+                runtimeGetTypeMethods[0].IsAbstract || runtimeGetTypeMethods[0].IsVirtual ||
+                runtimeGetTypeMethods[0].IsConstructor ||
+                runtimeGetTypeMethods[0].IsPublic || !runtimeGetTypeMethods[0].IsStatic ||
+                runtimeGetTypeMethods[0].GetParameters().Length != 0)
+            {
+                Error.ReportAndExit("Incorrect test runtime get type method declaration. Please " +
+                    "declare the method as follows:\n" +
+                    $"  [{typeof(TestRuntimeGetType).FullName}] internal static Type " +
+                    $"{runtimeGetTypeMethods[0].Name}() {{ ... }}");
+            }
+
+            this.TestRuntimeGetTypeMethod = runtimeGetTypeMethods[0];
         }
 
         /// <summary>
@@ -509,20 +548,29 @@ namespace Microsoft.PSharp.TestingServices
                 Error.ReportAndExit(msg);
             }
 
-            var testMethod = filteredTestMethods[0];
+            Type runtimeType;
+            if (this.TestRuntimeGetTypeMethod != null)
+            {
+                runtimeType = (Type)this.TestRuntimeGetTypeMethod.Invoke(null, new object[] { });
+            }
+            else
+            {
+                runtimeType = typeof(IStateMachineRuntime);
+            }
 
+            var testMethod = filteredTestMethods[0];
             if (testMethod.ReturnType != typeof(void) ||
                 testMethod.ContainsGenericParameters ||
                 testMethod.IsAbstract || testMethod.IsVirtual ||
                 testMethod.IsConstructor ||
                 !testMethod.IsPublic || !testMethod.IsStatic ||
                 testMethod.GetParameters().Length != 1 ||
-                testMethod.GetParameters()[0].ParameterType != typeof(IStateMachineRuntime))
+                testMethod.GetParameters()[0].ParameterType != runtimeType)
             {
                 Error.ReportAndExit("Incorrect test method declaration. Please " +
                     "declare the test method as follows:\n" +
                     $"  [{typeof(Test).FullName}] public static void " +
-                    $"{testMethod.Name}(IStateMachineRuntime runtime) {{ ... }}");
+                    $"{testMethod.Name}({runtimeType.FullName} runtime) {{ ... }}");
             }
 
             this.TestMethod = testMethod;

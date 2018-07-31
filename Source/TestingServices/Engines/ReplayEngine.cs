@@ -178,7 +178,7 @@ namespace Microsoft.PSharp.TestingServices
                     }
                     else
                     {
-                        runtime = new BugFindingRuntime(base.Configuration, base.Strategy, base.Reporter);
+                        runtime = BugFindingRuntime.Create(base.Configuration, base.Strategy, base.Reporter);
                     }
 
 

@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 namespace Microsoft.PSharp
 {
     /// <summary>
-    /// Runtime for executing state-machines in production.
+    /// Runtime for executing machines in production.
     /// </summary>
     internal class ProductionRuntime : BaseMachineRuntime, IStateMachineRuntime
     {

@@ -17,7 +17,7 @@ using Microsoft.PSharp.TestingServices;
 namespace Microsoft.PSharp.SharedObjects
 {
     /// <summary>
-    /// Shared counter that can be safely shared by multiple P# state-machines.
+    /// Shared counter that can be safely shared by multiple P# machines.
     /// </summary>
     public static class SharedCounter
     {

@@ -17,7 +17,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.PSharp.TestingServices.Coverage;
@@ -30,7 +29,7 @@ using Microsoft.PSharp.TestingServices.Tracing.Schedule;
 namespace Microsoft.PSharp.TestingServices
 {
     /// <summary>
-    /// Runtime for executing state-machines in bug-finding mode.
+    /// Runtime for executing machines in bug-finding mode.
     /// </summary>
     internal class BugFindingRuntime : BaseMachineRuntime, IStateMachineRuntime
     {
@@ -96,12 +95,32 @@ namespace Microsoft.PSharp.TestingServices
         internal bool startEventHandlerCalled;
 
         /// <summary>
+        /// Creates a P# runtime that executes in bug-finding mode.
+        /// </summary>
+        /// <param name="configuration">Configuration</param>
+        /// <param name="strategy">SchedulingStrategy</param>
+        /// <param name="reporter">Reporter to register runtime operations.</param>
+        /// <returns>BugFindingRuntime</returns>
+        [TestRuntimeCreate]
+        internal static BugFindingRuntime Create(Configuration configuration, ISchedulingStrategy strategy, IRegisterRuntimeOperation reporter)
+        {
+            return new BugFindingRuntime(configuration, strategy, reporter);
+        }
+
+        /// <summary>
+        /// Returns the type of the bug-finding runtime.
+        /// </summary>
+        /// <returns></returns>
+        [TestRuntimeGetType]
+        internal static Type GetRuntimeType() => typeof(IStateMachineRuntime);
+
+        /// <summary>
         /// Constructor.
         /// <param name="configuration">Configuration</param>
         /// <param name="strategy">SchedulingStrategy</param>
         /// <param name="reporter">Reporter to register runtime operations.</param>
         /// </summary>
-        internal BugFindingRuntime(Configuration configuration, ISchedulingStrategy strategy, IRegisterRuntimeOperation reporter)
+        protected BugFindingRuntime(Configuration configuration, ISchedulingStrategy strategy, IRegisterRuntimeOperation reporter)
             : base(configuration)
         {
             this.Initialize();

@@ -52,4 +52,10 @@ namespace Microsoft.PSharp
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
     internal sealed class TestRuntimeCreate : Attribute { }
+
+    /// <summary>
+    /// Attribute for declaring the type of the P# testing runtime.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method)]
+    internal sealed class TestRuntimeGetType : Attribute { }
 }

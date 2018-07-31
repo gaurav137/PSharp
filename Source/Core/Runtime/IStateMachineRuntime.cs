@@ -19,8 +19,8 @@ namespace Microsoft.PSharp
 {
     /// <summary>
     /// The interface of the P# runtime. It provides APIs for creating and executing
-    /// state-machines, sending events, writing and checking specifications, generating
-    /// controlled nondeterministic choices, as well as various runtime utilities.
+    /// machines, sending events, writing and checking specifications, as well as
+    /// various runtime utilities.
     /// </summary>
     public interface IStateMachineRuntime : IPSharpRuntime
     {

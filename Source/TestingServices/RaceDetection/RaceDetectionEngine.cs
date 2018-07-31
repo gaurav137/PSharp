@@ -128,7 +128,7 @@ namespace Microsoft.PSharp.TestingServices.RaceDetection
             return true;
         }
 
-        public void SetRuntime(IStateMachineRuntime runtime)
+        public void SetRuntime(IPSharpRuntime runtime)
         {
             runtime.Assert((runtime as BugFindingRuntime) != null,
                 "Requires passed runtime to support method GetCurrentMachineId");
