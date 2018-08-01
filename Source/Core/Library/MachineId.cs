@@ -93,32 +93,33 @@ namespace Microsoft.PSharp
         /// <param name="endpoint">Endpoint</param>
         private MachineId(BaseRuntime runtime, string type, string friendlyName, ulong generation, string endpoint)
         {
+            this.Runtime = runtime;
+            this.Type = type;
+            this.FriendlyName = friendlyName;
+            this.Generation = generation;
+            this.Endpoint = endpoint;
+
             // Atomically increments and safely wraps into an unsigned long.
-            this.Value = (ulong)Interlocked.Increment(ref runtime.MachineIdCounter) - 1;
+            this.Value = (ulong)Interlocked.Increment(ref this.Runtime.MachineIdCounter) - 1;
+
             // Checks for overflow.
             this.Runtime.Assert(this.Value != ulong.MaxValue, "Detected MachineId overflow.");
 
-            this.FriendlyName = friendlyName;
-            this.Runtime = runtime;
-            this.Endpoint = endpoint;
-            this.Generation = generation;
-            this.Type = type;
-
-            if (endpoint != null && endpoint.Length > 0 && friendlyName != null && friendlyName.Length > 0)
+            if (this.Endpoint != null && this.Endpoint.Length > 0 && this.FriendlyName != null && this.FriendlyName.Length > 0)
             {
-                this.Name = string.Format("{0}.{1}({2})", endpoint, friendlyName, Value);
+                this.Name = string.Format("{0}.{1}({2})", this.Endpoint, this.FriendlyName, this.Value);
             }
-            else if (endpoint != null && endpoint.Length > 0)
+            else if (this.Endpoint != null && this.Endpoint.Length > 0)
             {
-                this.Name = string.Format("{0}({1})", type, Value);
+                this.Name = string.Format("{0}({1})", this.Type, this.Value);
             }
-            else if (friendlyName != null && friendlyName.Length > 0)
+            else if (this.FriendlyName != null && this.FriendlyName.Length > 0)
             {
-                this.Name = string.Format("{0}({1})", friendlyName, Value);
+                this.Name = string.Format("{0}({1})", this.FriendlyName, this.Value);
             }
             else
             {
-                this.Name = string.Format("{0}({1})", type, Value);
+                this.Name = string.Format("{0}({1})", this.Type, this.Value);
             }
         }
 
