@@ -25,7 +25,7 @@ namespace PingPong.CustomLogging
             var configuration = Configuration.Create().WithVerbosityEnabled(2);
 
             // Creates a new P# runtime instance, and passes an optional configuration.
-            var runtime = RuntimeFactory.Create(configuration);
+            var runtime = RuntimeService.Create(configuration);
 
             // Creates and installs a custom logger.
             ILogger myLogger = new MyLogger();
