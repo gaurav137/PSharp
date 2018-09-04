@@ -429,6 +429,35 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             }
         }
 
+        class M17 : Machine
+        {
+            [Start]
+            [OnEventGotoState(typeof(E), typeof(Error))]
+            [OnEntry(nameof(InitOnEntry))]
+            class Init : BaseState { }
+
+            [OnEventDoAction(typeof(E), nameof(BaseCheck))]
+            class BaseState : MachineState { }
+
+            [OnEntry(nameof(ErrorOnEntry))]
+            class Error : MachineState { }
+
+            void InitOnEntry()
+            {
+                Send(Id, new E());
+            }
+
+            void BaseCheck()
+            {
+                Assert(false, "Error reached.");
+            }
+
+            void ErrorOnEntry()
+            {
+                Assert(false, "Error reached.");
+            }
+        }
+
         [Fact]
         public void TestMachineStateInheritingAbstractState()
         {
@@ -614,6 +643,21 @@ namespace Microsoft.PSharp.TestingServices.Tests.Unit
             });
 
             var bugReport = "Done reached.";
+            AssertFailed(test, bugReport, false);
+        }
+
+        [Fact]
+        public void TestMachineStateOverridingConflictingEventHandler()
+        {
+            var test = new Action<PSharpRuntime>((r) =>
+            {
+                r.CreateMachine(typeof(M17));
+            });
+
+            var bugReport = "Machine 'Microsoft.PSharp.TestingServices.Tests.Unit.MachineStateInheritanceTest+M17()' " +
+                "inherited multiple handlers for 'Microsoft.PSharp.TestingServices.Tests.Unit.MachineStateInheritanceTest+E' " +
+                "from state 'Microsoft.PSharp.TestingServices.Tests.Unit.MachineStateInheritanceTest+M17+BaseState' " +
+                "in state 'Microsoft.PSharp.TestingServices.Tests.Unit.MachineStateInheritanceTest+M17+Init'.";
             AssertFailed(test, bugReport, false);
         }
     }
